@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudentHelp – Interactive Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6f9;
+  --surface:#ffffff;
+  --border:#e8ecf2;
+  --text:#0f1117;
+  --muted:#6b7280;
+  --accent:#2563eb;
+  --accent-dark:#1d4ed8;
+  --accent-bg:#eff4ff;
+  --accent-light:#dbeafe;
+  --green:#16a34a;
+  --green-bg:#dcfce7;
+  --amber:#d97706;
+  --amber-bg:#fef3c7;
+  --red:#dc2626;
+  --red-bg:#fee2e2;
+  --purple:#7c3aed;
+  --purple-bg:#ede9fe;
+  --radius:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.12);
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* ── SCREEN SYSTEM ── */
+.screen{display:none;min-height:100vh;animation:fadeIn .2s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── NAV ── */
+nav.topnav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 40px;display:flex;align-items:center;gap:0;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 var(--border)}
+.nav-logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;color:var(--text);margin-right:36px;cursor:pointer;flex-shrink:0}
+.nav-logo svg{color:var(--accent)}
+.nav-links{display:flex;align-items:center;gap:2px;flex:1}
+.nav-link{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--muted);cursor:pointer;transition:.15s;white-space:nowrap;border:none;background:none}
+.nav-link:hover{background:var(--bg);color:var(--text)}
+.nav-link.active{color:var(--accent);background:var(--accent-bg)}
+.nav-link .badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:2px}
+.nav-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.btn-logout{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:none;transition:.15s}
+.btn-logout:hover{background:var(--red-bg);color:var(--red)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 20px;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:.15s;border:none;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-dark);transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,.3)}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-ghost{background:none;color:var(--accent);border:none;padding:8px 12px}
+.btn-ghost:hover{background:var(--accent-bg)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid #fca5a5}
+.btn-danger:hover{background:var(--red);color:#fff}
+.btn-lg{padding:13px 28px;font-size:15px;border-radius:10px}
+.btn-sm{padding:6px 13px;font-size:12.5px;border-radius:7px}
+.btn-full{width:100%}
+
+/* ── FORM ── */
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.form-input{width:100%;padding:11px 14px 11px 40px;border:1.5px solid var(--border);border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);background:var(--surface);transition:.15s;outline:none}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.form-input.no-icon{padding-left:14px}
+.input-wrap{position:relative}
+.input-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+select.form-input{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+textarea.form-input{resize:vertical;min-height:90px;line-height:1.6;padding-top:11px}
+
+/* ── RADIO CARDS ── */
+.role-options{display:flex;flex-direction:column;gap:10px}
+.role-card{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:.15s}
+.role-card:hover{border-color:var(--accent);background:var(--accent-bg)}
+.role-card.selected{border-color:var(--accent);background:var(--accent-bg)}
+.role-radio{width:18px;height:18px;border:2px solid var(--border);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s}
+.role-card.selected .role-radio{border-color:var(--accent)}
+.role-radio-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;display:none}
+.role-card.selected .role-radio-dot{display:block}
+.role-card-text strong{font-size:14px;font-weight:600;display:block}
+.role-card-text span{font-size:12.5px;color:var(--muted)}
+
+/* ── TAGS ── */
+.tag{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:6px;white-space:nowrap}
+.tag-blue{background:#dbeafe;color:#1d4ed8}
+.tag-green{background:#dcfce7;color:#15803d}
+.tag-amber{background:#fef3c7;color:#b45309}
+.tag-red{background:#fee2e2;color:#b91c1c}
+.tag-gray{background:#f1f5f9;color:#475569}
+.tag-purple{background:#ede9fe;color:#6d28d9}
+.status-open{background:#dcfce7;color:#15803d;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600}
+.status-progress{background:#fef3c7;color:#b45309;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600}
+.status-closed{background:#f1f5f9;color:#64748b;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600}
+.priority-high{background:#fee2e2;color:#b91c1c}
+.priority-medium{background:#fef3c7;color:#b45309}
+.priority-low{background:#f0fdf4;color:#166534}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;transition:box-shadow .15s,border-color .15s}
+.card:hover{box-shadow:var(--shadow)}
+.card-clickable{cursor:pointer}
+.card-clickable:hover{border-color:var(--accent-light)}
+
+/* ── STAT CARDS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:flex;align-items:center;gap:14px}
+.stat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.stat-val{font-size:26px;font-weight:800;line-height:1}
+.stat-lbl{font-size:12.5px;color:var(--muted);margin-top:3px;font-weight:500}
+
+/* ── REQUEST CARD ── */
+.req-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all .15s}
+.req-card:hover{border-color:var(--accent-light);box-shadow:var(--shadow)}
+.req-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.req-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.req-title{font-size:15.5px;font-weight:700;margin-bottom:5px}
+.req-desc{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:10px}
+.req-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+
+/* ── AUTH SCREEN ── */
+#screen-auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#eff6ff 0%,#f0f4ff 50%,#f5f3ff 100%)}
+.auth-container{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px;width:100%;max-width:440px;box-shadow:var(--shadow-lg)}
+.auth-title{text-align:center;font-size:22px;font-weight:800;margin-bottom:4px}
+.auth-sub{text-align:center;font-size:13.5px;color:var(--muted);margin-bottom:28px}
+.auth-switch{text-align:center;margin-top:18px;font-size:13px;color:var(--muted)}
+.auth-switch a{color:var(--accent);font-weight:600;cursor:pointer;text-decoration:none}
+.auth-tabs{display:flex;background:var(--bg);border-radius:9px;padding:3px;margin-bottom:24px}
+.auth-tab{flex:1;padding:8px;border-radius:7px;text-align:center;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--muted);transition:.15s}
+.auth-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* ── HERO BANNER ── */
+.hero{background:linear-gradient(135deg,#1d4ed8 0%,#4338ca 100%);border-radius:var(--radius);padding:28px 32px;color:#fff;margin-bottom:24px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;right:-20px;top:-20px;width:160px;height:160px;background:rgba(255,255,255,.06);border-radius:50%}
+.hero::before{content:'';position:absolute;right:60px;bottom:-40px;width:200px;height:200px;background:rgba(255,255,255,.04);border-radius:50%}
+.hero h2{font-size:22px;font-weight:800;margin-bottom:6px}
+.hero p{font-size:14px;opacity:.85;margin-bottom:18px}
+.hero .btn{background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);backdrop-filter:blur(4px)}
+.hero .btn:hover{background:rgba(255,255,255,.25)}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(15,17,23,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);animation:fadeIn .15s ease}
+.modal{background:var(--surface);border-radius:16px;padding:28px;width:100%;max-width:520px;box-shadow:var(--shadow-lg);position:relative;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:22px}
+.modal-close{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--muted);transition:.15s}
+.modal-close:hover{background:var(--border);color:var(--text)}
+
+/* ── EMPTY STATE ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 20px;gap:12px;color:var(--muted)}
+.empty-icon{font-size:42px;opacity:.4}
+.empty h3{font-size:15px;font-weight:700;color:var(--text)}
+.empty p{font-size:13px;text-align:center}
+
+/* ── MESSAGES ── */
+.msg-layout{display:grid;grid-template-columns:280px 1fr;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);overflow:hidden;height:580px}
+.msg-sidebar{border-right:1px solid var(--border);overflow-y:auto}
+.msg-sidebar-head{padding:16px 18px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px}
+.msg-convo-item{padding:14px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:.12s}
+.msg-convo-item:hover{background:var(--bg)}
+.msg-convo-item.active{background:var(--accent-bg);border-left:3px solid var(--accent)}
+.msg-convo-name{font-weight:600;font-size:13.5px}
+.msg-convo-preview{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg-main{display:flex;flex-direction:column}
+.msg-main-head{padding:16px 20px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px;display:flex;align-items:center;gap:10px}
+.msg-messages{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.msg-bubble{max-width:68%;padding:10px 14px;border-radius:12px;font-size:13.5px;line-height:1.55}
+.msg-bubble.them{background:var(--bg);border-bottom-left-radius:3px;align-self:flex-start}
+.msg-bubble.me{background:var(--accent);color:#fff;border-bottom-right-radius:3px;align-self:flex-end}
+.msg-time{font-size:11px;color:var(--muted);margin-top:2px}
+.msg-time.me{text-align:right;color:rgba(255,255,255,.6)}
+.msg-input-area{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:flex-end}
+.msg-input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13.5px;outline:none;resize:none;max-height:100px;min-height:40px}
+.msg-input:focus{border-color:var(--accent)}
+
+/* ── PAGE CONTAINER ── */
+.page-wrap{max-width:1060px;margin:0 auto;padding:32px 24px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-title{font-size:24px;font-weight:800}
+.page-sub{font-size:13.5px;color:var(--muted);margin-top:2px}
+
+/* ── PROFILE ── */
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-weight:800;font-size:26px;display:flex;align-items:center;justify-content:center;margin-right:18px;flex-shrink:0}
+
+/* ── HOW IT WORKS ── */
+.how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;text-align:center}
+.how-step-num{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;margin:0 auto 12px}
+.how-step-title{font-weight:700;font-size:14px;margin-bottom:6px}
+.how-step-desc{font-size:12.5px;color:var(--muted);line-height:1.55}
+
+/* ── OFFER FORM ── */
+.offer-req-title{background:var(--bg);border-radius:9px;padding:12px 14px;margin-bottom:18px;font-size:13.5px;font-weight:600;border-left:3px solid var(--accent)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:#0f1117;color:#fff;padding:12px 18px;border-radius:10px;font-size:13.5px;font-weight:500;z-index:999;box-shadow:var(--shadow-lg);animation:slideUp .25s ease;display:flex;align-items:center;gap:8px}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── FILTER BAR ── */
+.filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:20px}
+.filter-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.filter-search{flex:1;min-width:220px}
+.filter-selects{display:flex;gap:10px;flex-wrap:wrap}
+.filter-select{padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text);background:var(--surface);cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:.15s}
+.filter-select:focus{border-color:var(--accent)}
+
+/* ── SECTION HEAD ── */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-size:16px;font-weight:700}
+
+/* divider */
+.divider{height:1px;background:var(--border);margin:18px 0}
+
+/* notification dot */
+.notif-dot{width:8px;height:8px;background:var(--red);border-radius:50%;display:inline-block;margin-left:2px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     AUTH SCREEN (Register + Login)
+═══════════════════════════════════════════ -->
+<div class="screen active" id="screen-auth">
+  <div id="screen-auth-inner" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#eff6ff 0%,#f0f4ff 50%,#f5f3ff 100%)">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:22px">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        StudentHelp
+      </div>
+    </div>
+    <div class="auth-container">
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</div>
+        <div class="auth-tab" id="tab-login" onclick="switchAuthTab('login')">Sign In</div>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="auth-signup">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input class="form-input" id="reg-name" type="text" placeholder="Your full name" value="nina">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <input class="form-input" id="reg-email" type="email" placeholder="you@university.edu" value="nina@scu.edu">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input class="form-input" id="reg-pass" type="password" placeholder="Create a password" value="••••••••">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">I want to:</label>
+          <div class="role-options" id="role-options">
+            <div class="role-card selected" data-role="requester" onclick="selectRole(this)">
+              <div class="role-radio"><div class="role-radio-dot"></div></div>
+              <div class="role-card-text"><strong>Request Help</strong><span>I need assistance with my studies</span></div>
+            </div>
+            <div class="role-card" data-role="helper" onclick="selectRole(this)">
+              <div class="role-radio"><div class="role-radio-dot"></div></div>
+              <div class="role-card-text"><strong>Offer Help</strong><span>I want to help other students</span></div>
+            </div>
+            <div class="role-card" data-role="both" onclick="selectRole(this)">
+              <div class="role-radio"><div class="role-radio-dot"></div></div>
+              <div class="role-card-text"><strong>Both</strong><span>I want to request and offer help</span></div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="doRegister()">Sign Up</button>
+        <div class="auth-switch">Already have an account? <a onclick="switchAuthTab('login')">Log in</a></div>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="auth-login" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <input class="form-input" type="email" placeholder="you@university.edu" value="nina@scu.edu">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input class="form-input" type="password" value="••••••••">
+          </div>
+        </div>
+        <div style="text-align:right;margin-bottom:18px"><a style="font-size:13px;color:var(--accent);font-weight:600;cursor:pointer">Forgot password?</a></div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="doLogin()">Sign In</button>
+        <div class="auth-switch">Don't have an account? <a onclick="switchAuthTab('signup')">Sign up</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN APP (all screens share this nav)
+═══════════════════════════════════════════ -->
+<div class="screen" id="screen-app">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="goTo('home')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      StudentHelp
+    </div>
+    <div class="nav-links">
+      <button class="nav-link active" id="nav-home" onclick="goTo('home')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </button>
+      <button class="nav-link" id="nav-browse" onclick="goTo('browse')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Browse Requests
+      </button>
+      <button class="nav-link" id="nav-myrequests" onclick="goTo('myrequests')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        My Requests
+      </button>
+      <button class="nav-link" id="nav-sessions" onclick="goTo('sessions')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Sessions
+      </button>
+      <button class="nav-link" id="nav-messages" onclick="goTo('messages')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Messages
+        <span class="badge" id="msg-badge">2</span>
+      </button>
+      <button class="nav-link" id="nav-profile" onclick="goTo('profile')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </button>
+    </div>
+    <div class="nav-right">
+      <div class="avatar" id="nav-avatar" onclick="goTo('profile')">N</div>
+      <button class="btn-logout" onclick="doLogout()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+    </div>
+  </nav>
+
+  <!-- HOME -->
+  <div id="view-home" style="display:block">
+    <div class="page-wrap">
+      <div class="hero">
+        <h2 id="hero-greeting">Welcome back, nina! 👋</h2>
+        <p>Need help with your studies? We're here for you.</p>
+        <button class="btn" onclick="openNewRequestModal()">Create Help Request →</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#eff4ff">📋</div>
+          <div><div class="stat-val" id="stat-myrequests">0</div><div class="stat-lbl">My Requests</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#f0fdf4">📅</div>
+          <div><div class="stat-val" id="stat-sessions">0</div><div class="stat-lbl">Sessions</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fef3c7">👥</div>
+          <div><div class="stat-val" id="stat-open">3</div><div class="stat-lbl">Open Requests</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fce7f3">✅</div>
+          <div><div class="stat-val" id="stat-completed">0</div><div class="stat-lbl">Completed</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="section-head">
+          <div class="section-title">Recent Requests</div>
+          <button class="btn btn-ghost btn-sm" onclick="goTo('browse')">View all →</button>
+        </div>
+        <div id="home-recent-requests"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:20px">How It Works</div>
+        <div class="how-steps">
+          <div>
+            <div class="how-step-num" style="background:#dbeafe;color:#1d4ed8">1</div>
+            <div class="how-step-title">Post or Browse</div>
+            <div class="how-step-desc">Post a request describing what help you need, or browse existing requests to offer your help</div>
+          </div>
+          <div>
+            <div class="how-step-num" style="background:#dcfce7;color:#15803d">2</div>
+            <div class="how-step-title">Connect</div>
+            <div class="how-step-desc">Helpers submit offers and requesters review and accept the best match</div>
+          </div>
+          <div>
+            <div class="how-step-num" style="background:#ede9fe;color:#6d28d9">3</div>
+            <div class="how-step-title">Get Help</div>
+            <div class="how-step-desc">Schedule a session, coordinate details, and achieve your goals together</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BROWSE -->
+  <div id="view-browse" style="display:none">
+    <div class="page-wrap">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Browse Help Requests</div>
+          <div class="page-sub">Find students who need your help</div>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="filter-search input-wrap" style="flex:1;min-width:200px">
+            <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="form-input" id="browse-search" placeholder="Search requests..." oninput="filterRequests()">
+          </div>
+          <div class="filter-selects">
+            <select class="filter-select" id="filter-subject" onchange="filterRequests()">
+              <option value="">All Subjects</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Other">Other</option>
+            </select>
+            <select class="filter-select" id="filter-urgency" onchange="filterRequests()">
+              <option value="">All Urgencies</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="browse-count" style="font-size:13px;color:var(--muted);margin-bottom:14px">3 requests found</div>
+      <div id="browse-list"></div>
+    </div>
+  </div>
+
+  <!-- MY REQUESTS -->
+  <div id="view-myrequests" style="display:none">
+    <div class="page-wrap">
+      <div class="page-header">
+        <div>
+          <div class="page-title">My Requests</div>
+          <div class="page-sub">Manage your help requests</div>
+        </div>
+        <button class="btn btn-primary" onclick="openNewRequestModal()">+ New Request</button>
+      </div>
+      <div id="my-requests-list">
+        <div class="empty">
+          <div class="empty-icon">📄</div>
+          <h3>No Requests Yet</h3>
+          <p>You haven't created any help requests. Create one to get started!</p>
+          <button class="btn btn-primary" style="margin-top:8px" onclick="openNewRequestModal()">Create Your First Request</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SESSIONS -->
+  <div id="view-sessions" style="display:none">
+    <div class="page-wrap">
+      <div class="page-header">
+        <div>
+          <div class="page-title">My Sessions</div>
+          <div class="page-sub">View and manage your tutoring sessions</div>
+        </div>
+      </div>
+      <div class="section-title" style="margin-bottom:14px">Upcoming Sessions</div>
+      <div id="upcoming-sessions">
+        <div class="card" style="margin-bottom:20px">
+          <div class="empty">
+            <div class="empty-icon">📅</div>
+            <p>No upcoming sessions scheduled</p>
+          </div>
+        </div>
+      </div>
+      <div class="section-title" style="margin-bottom:14px">Past Sessions</div>
+      <div id="past-sessions">
+        <div class="card">
+          <div class="empty">
+            <div class="empty-icon">📅</div>
+            <h3>No Sessions Yet</h3>
+            <p>Create a request to schedule your first session</p>
+            <button class="btn btn-primary" style="margin-top:8px" onclick="openNewRequestModal()">Create Request</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div id="view-messages" style="display:none">
+    <div class="page-wrap">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Messages</div>
+          <div class="page-sub">Communicate with students</div>
+        </div>
+      </div>
+      <div class="msg-layout">
+        <div class="msg-sidebar">
+          <div class="msg-sidebar-head">Conversations</div>
+          <div class="msg-convo-item active" onclick="openConvo(0,this)">
+            <div class="msg-convo-name">Sarah Johnson</div>
+            <div class="msg-convo-preview">Hey! I saw your request about Calculus...</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">2:08 PM</div>
+          </div>
+          <div class="msg-convo-item" onclick="openConvo(1,this)">
+            <div class="msg-convo-name">Mike Davis</div>
+            <div class="msg-convo-preview">I can help with your React project</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">Yesterday</div>
+          </div>
+        </div>
+        <div class="msg-main" id="msg-main-area">
+          <div class="msg-main-head" id="msg-main-head">
+            <div class="avatar" style="width:30px;height:30px;font-size:12px">S</div>
+            Sarah Johnson
+          </div>
+          <div class="msg-messages" id="msg-messages">
+            <div>
+              <div class="msg-bubble them">Hey! I saw your request about Calculus II. I took that class last semester and aced it — I'd love to help you with integration by parts! 😊</div>
+              <div class="msg-time">2:08 PM</div>
+            </div>
+            <div>
+              <div class="msg-bubble me">That's amazing! I'm really struggling with it. When are you free to meet?</div>
+              <div class="msg-time me">2:12 PM</div>
+            </div>
+            <div>
+              <div class="msg-bubble them">I'm free tomorrow evening after 6pm, or anytime this weekend. Does that work?</div>
+              <div class="msg-time">2:15 PM</div>
+            </div>
+          </div>
+          <div class="msg-input-area">
+            <textarea class="msg-input" id="msg-input-box" placeholder="Type a message..." rows="1" onkeydown="handleMsgKey(event)"></textarea>
+            <button class="btn btn-primary btn-sm" onclick="sendMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="view-profile" style="display:none">
+    <div class="page-wrap">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Profile</div>
+          <div class="page-sub">Manage your account information</div>
+        </div>
+        <button class="btn btn-primary" onclick="openEditProfileModal()">✏️ Edit Profile</button>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;margin-bottom:20px">
+          <div class="profile-avatar" id="profile-avatar">N</div>
+          <div>
+            <div style="font-size:20px;font-weight:800" id="profile-name">nina</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+              <span style="font-size:13px;color:var(--muted)" id="profile-email">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                nina@scu.edu
+              </span>
+              <span class="tag tag-blue" id="profile-role-tag">Requester</span>
+            </div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+          <div style="background:var(--bg);border-radius:9px;padding:16px;text-align:center">
+            <div style="font-size:26px;font-weight:800;color:var(--accent)" id="profile-sessions-count">0</div>
+            <div style="font-size:12.5px;color:var(--muted);margin-top:4px">Completed Sessions</div>
+          </div>
+          <div style="background:var(--bg);border-radius:9px;padding:16px;text-align:center">
+            <div style="font-size:26px;font-weight:800;color:var(--green)">N/A</div>
+            <div style="font-size:12.5px;color:var(--muted);margin-top:4px">Rating</div>
+          </div>
+        </div>
+        <div style="margin-bottom:6px;font-size:13px;font-weight:600;color:var(--muted)">Bio</div>
+        <div id="profile-bio" style="font-size:14px;color:var(--muted);font-style:italic">No bio provided</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#screen-app -->
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- New Request Modal -->
+<div id="modal-new-request" style="display:none">
+  <div class="modal-bg" onclick="closeModal('modal-new-request')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-new-request')">✕</button>
+      <div class="modal-title">Create Help Request</div>
+      <div class="modal-sub">Describe what you need help with</div>
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input class="form-input no-icon" id="nr-title" type="text" placeholder="e.g. Need help with Calculus II homework">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-input no-icon" id="nr-desc" placeholder="Describe what you need help with..."></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group">
+          <label class="form-label">Subject</label>
+          <select class="form-input no-icon" id="nr-subject">
+            <option>Mathematics</option>
+            <option>Computer Science</option>
+            <option>Physics</option>
+            <option>Chemistry</option>
+            <option>Biology</option>
+            <option>English</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Urgency</label>
+          <select class="form-input no-icon" id="nr-urgency">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Format</label>
+        <select class="form-input no-icon" id="nr-format">
+          <option value="online">Online</option>
+          <option value="in-person">In-Person</option>
+          <option value="either">Either</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-new-request')">Cancel</button>
+        <button class="btn btn-primary" style="flex:2" onclick="submitNewRequest()">Post Request</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Offer Modal -->
+<div id="modal-offer" style="display:none">
+  <div class="modal-bg" onclick="closeModal('modal-offer')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-offer')">✕</button>
+      <div class="modal-title">Submit an Offer</div>
+      <div class="modal-sub">Tell the requester how you can help</div>
+      <div class="offer-req-title" id="offer-req-title">Loading...</div>
+      <div class="form-group">
+        <label class="form-label">Your Message</label>
+        <textarea class="form-input no-icon" id="offer-msg" rows="4" placeholder="Introduce yourself and explain how you can help..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Availability</label>
+        <input class="form-input no-icon" id="offer-avail" type="text" placeholder="e.g. Weekdays after 5pm, anytime weekends">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-offer')">Cancel</button>
+        <button class="btn btn-primary" style="flex:2" onclick="submitOffer()">Send Offer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Request Detail Modal -->
+<div id="modal-request-detail" style="display:none">
+  <div class="modal-bg" onclick="closeModal('modal-request-detail')">
+    <div class="modal" style="max-width:560px" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-request-detail')">✕</button>
+      <div id="modal-detail-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="modal-edit-profile" style="display:none">
+  <div class="modal-bg" onclick="closeModal('modal-edit-profile')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-edit-profile')">✕</button>
+      <div class="modal-title">Edit Profile</div>
+      <div class="modal-sub">Update your account information</div>
+      <div class="form-group">
+        <label class="form-label">Display Name</label>
+        <input class="form-input no-icon" id="ep-name" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bio</label>
+        <textarea class="form-input no-icon" id="ep-bio" rows="3" placeholder="Tell others about yourself..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-input no-icon" id="ep-role">
+          <option value="requester">Requester</option>
+          <option value="helper">Helper</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-edit-profile')">Cancel</button>
+        <button class="btn btn-primary" style="flex:2" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════
+// STATE
+// ═══════════════════════════════
+let currentUser = {name:'nina', email:'nina@scu.edu', role:'requester', bio:''};
+let myRequests = [];
+let conversations = [
+  {id:0, name:'Sarah Johnson', initials:'S', color:'#2563eb',
+   messages:[
+     {from:'them',text:"Hey! I saw your request about Calculus II. I took that class last semester and aced it — I'd love to help you with integration by parts! 😊",time:'2:08 PM'},
+     {from:'me',text:"That's amazing! I'm really struggling with it. When are you free to meet?",time:'2:12 PM'},
+     {from:'them',text:"I'm free tomorrow evening after 6pm, or anytime this weekend. Does that work?",time:'2:15 PM'},
+   ]},
+  {id:1, name:'Mike Davis', initials:'M', color:'#7c3aed',
+   messages:[
+     {from:'them',text:"Hi! I saw you need help with your React project. I've been using React for 2 years — happy to walk you through components and state management!",time:'Yesterday'},
+     {from:'me',text:"That would be super helpful! Can we do a Zoom call this week?",time:'Yesterday'},
+   ]},
+];
+let currentConvo = 0;
+let activeView = 'home';
+
+const sampleRequests = [
+  {id:1, title:'Need help with Calculus II homework', desc:'Struggling with integration by parts and related problems. Need someone to walk me through a few examples.', subject:'Mathematics', category:'Tutoring', urgency:'high', format:'online', by:'Sarah Johnson', date:'2/23/2026', status:'open'},
+  {id:2, title:'Help setting up React project', desc:'New to React and need help understanding components and state management. Would love a quick tutorial session.', subject:'Computer Science', category:'Project Guidance', urgency:'medium', format:'either', by:'Mike Davis', date:'2/23/2026', status:'open'},
+  {id:3, title:'Moving furniture – need help!', desc:'Need help moving some furniture in my dorm room this weekend. Should take about 30 minutes.', subject:'Other', category:'General Assistance', urgency:'low', format:'in-person', by:'Emily Rodriguez', date:'2/22/2026', status:'open'},
+];
+
+// ═══════════════════════════════
+// AUTH
+// ═══════════════════════════════
+function switchAuthTab(tab) {
+  document.getElementById('auth-signup').style.display = tab==='signup'?'block':'none';
+  document.getElementById('auth-login').style.display = tab==='login'?'block':'none';
+  document.getElementById('tab-signup').classList.toggle('active', tab==='signup');
+  document.getElementById('tab-login').classList.toggle('active', tab==='login');
+}
+
+function doRegister() {
+  const name = document.getElementById('reg-name').value.trim() || 'Student';
+  const email = document.getElementById('reg-email').value.trim() || 'student@scu.edu';
+  const roleEl = document.querySelector('.role-card.selected');
+  currentUser = {name, email, role: roleEl ? roleEl.dataset.role : 'requester', bio:''};
+  launchApp();
+}
+
+function doLogin() { launchApp(); }
+
+function launchApp() {
+  document.getElementById('screen-auth').style.display = 'none';
+  document.getElementById('screen-app').classList.add('active');
+  document.getElementById('screen-app').style.display = 'block';
+  updateUserUI();
+  renderHomeRequests();
+  renderBrowseRequests();
+  renderMyRequests();
+  goTo('home');
+}
+
+function doLogout() {
+  document.getElementById('screen-app').style.display = 'none';
+  document.getElementById('screen-auth').style.display = 'block';
+  document.getElementById('screen-auth').classList.add('active');
+}
+
+function selectRole(el) {
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ═══════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════
+function goTo(view) {
+  const views = ['home','browse','myrequests','sessions','messages','profile'];
+  views.forEach(v => document.getElementById('view-'+v).style.display = 'none');
+  document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-'+view).style.display = 'block';
+  const navBtn = document.getElementById('nav-'+view);
+  if(navBtn) navBtn.classList.add('active');
+  activeView = view;
+  if(view==='messages') { document.getElementById('msg-badge').style.display='none'; }
+}
+
+// ═══════════════════════════════
+// USER UI
+// ═══════════════════════════════
+function updateUserUI() {
+  const initial = currentUser.name.charAt(0).toUpperCase();
+  document.getElementById('nav-avatar').textContent = initial;
+  document.getElementById('profile-avatar').textContent = initial;
+  document.getElementById('profile-name').textContent = currentUser.name;
+  document.getElementById('profile-email').innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg> ${currentUser.email}`;
+  document.getElementById('hero-greeting').textContent = `Welcome back, ${currentUser.name}! 👋`;
+  const roleMap = {requester:'Requester',helper:'Helper',both:'Both'};
+  document.getElementById('profile-role-tag').textContent = roleMap[currentUser.role]||'Requester';
+  if(currentUser.bio) document.getElementById('profile-bio').textContent = currentUser.bio;
+  else document.getElementById('profile-bio').innerHTML = '<em>No bio provided</em>';
+}
+
+// ═══════════════════════════════
+// REQUESTS RENDERING
+// ═══════════════════════════════
+function urgencyColor(u) {
+  if(u==='high') return 'priority-high';
+  if(u==='medium') return 'priority-medium';
+  return 'priority-low';
+}
+
+function formatBadge(f) {
+  return `<span class="tag tag-gray">${f}</span>`;
+}
+
+function renderCard(req, showOfferBtn=true) {
+  return `
+    <div class="req-card card-clickable" onclick="openRequestDetail(${req.id})">
+      <div class="req-card-header">
+        <div class="req-tags">
+          <span class="tag tag-blue">${req.subject}</span>
+          <span class="tag tag-gray">${req.category}</span>
+          <span class="tag ${urgencyColor(req.urgency)}">${req.urgency} priority</span>
+          ${formatBadge(req.format)}
+        </div>
+        <span class="status-open">Open</span>
+      </div>
+      <div class="req-title">${req.title}</div>
+      <div class="req-desc">${req.desc}</div>
+      <div class="req-meta">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Posted ${req.date} &nbsp;·&nbsp; By ${req.by}
+        ${showOfferBtn ? `<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="event.stopPropagation();openOfferModal(${req.id})">Offer Help</button>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderHomeRequests() {
+  const el = document.getElementById('home-recent-requests');
+  const all = [...sampleRequests, ...myRequests.filter(r=>r.status==='open')].slice(0,3);
+  el.innerHTML = all.map(r => renderCard(r, false)).join('');
+  document.getElementById('stat-open').textContent = all.length;
+}
+
+function renderBrowseRequests() {
+  const all = [...sampleRequests, ...myRequests.filter(r=>r.status==='open')];
+  const search = (document.getElementById('browse-search')||{}).value||'';
+  const subj = (document.getElementById('filter-subject')||{}).value||'';
+  const urg = (document.getElementById('filter-urgency')||{}).value||'';
+  const filtered = all.filter(r => {
+    const matchSearch = !search || r.title.toLowerCase().includes(search.toLowerCase()) || r.desc.toLowerCase().includes(search.toLowerCase());
+    const matchSubj = !subj || r.subject === subj;
+    const matchUrg = !urg || r.urgency === urg;
+    return matchSearch && matchSubj && matchUrg;
+  });
+  document.getElementById('browse-count').textContent = `${filtered.length} request${filtered.length!==1?'s':''} found`;
+  document.getElementById('browse-list').innerHTML = filtered.map(r => renderCard(r, true)).join('') ||
+    '<div class="empty"><div class="empty-icon">🔍</div><p>No requests match your filters</p></div>';
+}
+
+function filterRequests() { renderBrowseRequests(); }
+
+function renderMyRequests() {
+  const el = document.getElementById('my-requests-list');
+  document.getElementById('stat-myrequests').textContent = myRequests.length;
+  if(!myRequests.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📄</div><h3>No Requests Yet</h3><p>You haven't created any help requests.</p><button class="btn btn-primary" style="margin-top:8px" onclick="openNewRequestModal()">Create Your First Request</button></div>`;
+    return;
+  }
+  el.innerHTML = myRequests.map(r => `
+    <div class="req-card card-clickable" onclick="openRequestDetail(${r.id})">
+      <div class="req-card-header">
+        <div class="req-tags">
+          <span class="tag tag-blue">${r.subject}</span>
+          <span class="tag ${urgencyColor(r.urgency)}">${r.urgency} priority</span>
+        </div>
+        <span class="${r.status==='open'?'status-open':r.status==='in-progress'?'status-progress':'status-closed'}">${r.status==='in-progress'?'In Progress':r.status.charAt(0).toUpperCase()+r.status.slice(1)}</span>
+      </div>
+      <div class="req-title">${r.title}</div>
+      <div class="req-desc">${r.desc}</div>
+      <div class="req-meta">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Posted ${r.date}
+        ${r.status==='open' ? `<button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="event.stopPropagation();deleteRequest(${r.id})">Delete</button>` : ''}
+        ${r.status==='in-progress' ? `<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="event.stopPropagation();markComplete(${r.id})">Mark Complete</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function deleteRequest(id) {
+  myRequests = myRequests.filter(r => r.id !== id);
+  renderMyRequests(); renderBrowseRequests(); renderHomeRequests();
+  showToast('🗑️ Request deleted');
+}
+
+function markComplete(id) {
+  const r = myRequests.find(r=>r.id===id);
+  if(r){ r.status='closed'; renderMyRequests(); renderBrowseRequests(); renderHomeRequests();
+    document.getElementById('stat-completed').textContent = parseInt(document.getElementById('stat-completed').textContent)+1;
+    document.getElementById('profile-sessions-count').textContent = parseInt(document.getElementById('profile-sessions-count').textContent)+1;
+    showToast('✅ Request marked as complete!');
+  }
+}
+
+// ═══════════════════════════════
+// MODALS
+// ═══════════════════════════════
+function openModal(id) { document.getElementById(id).style.display='block'; }
+function closeModal(id) { document.getElementById(id).style.display='none'; }
+
+function openNewRequestModal() { openModal('modal-new-request'); }
+
+function submitNewRequest() {
+  const title = document.getElementById('nr-title').value.trim();
+  if(!title){ showToast('⚠️ Please add a title'); return; }
+  const req = {
+    id: Date.now(), title,
+    desc: document.getElementById('nr-desc').value.trim() || 'No description provided.',
+    subject: document.getElementById('nr-subject').value,
+    category: 'Tutoring', urgency: document.getElementById('nr-urgency').value,
+    format: document.getElementById('nr-format').value,
+    by: currentUser.name, date: new Date().toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'numeric'}),
+    status: 'open'
+  };
+  myRequests.unshift(req);
+  closeModal('modal-new-request');
+  document.getElementById('nr-title').value=''; document.getElementById('nr-desc').value='';
+  renderMyRequests(); renderBrowseRequests(); renderHomeRequests();
+  showToast('🎉 Help request posted!');
+  goTo('myrequests');
+}
+
+let currentOfferReqId = null;
+function openOfferModal(reqId) {
+  currentOfferReqId = reqId;
+  const req = [...sampleRequests,...myRequests].find(r=>r.id===reqId);
+  document.getElementById('offer-req-title').textContent = req ? req.title : 'Request';
+  document.getElementById('offer-msg').value=''; document.getElementById('offer-avail').value='';
+  openModal('modal-offer');
+}
+
+function submitOffer() {
+  const msg = document.getElementById('offer-msg').value.trim();
+  if(!msg){ showToast('⚠️ Please write a message'); return; }
+  closeModal('modal-offer');
+  showToast('📨 Offer sent! The requester will be notified.');
+  document.getElementById('msg-badge').style.display='flex';
+}
+
+function openRequestDetail(id) {
+  const req = [...sampleRequests,...myRequests].find(r=>r.id===id);
+  if(!req) return;
+  const urgLabel = req.urgency.charAt(0).toUpperCase()+req.urgency.slice(1);
+  const isOtherUser = sampleRequests.find(r=>r.id===id);
+  document.getElementById('modal-detail-content').innerHTML = `
+    <div class="req-tags" style="margin-bottom:14px">
+      <span class="tag tag-blue">${req.subject}</span>
+      <span class="tag ${urgencyColor(req.urgency)}">${urgLabel} priority</span>
+      <span class="tag tag-gray">${req.format}</span>
+      <span class="${req.status==='open'?'status-open':req.status==='in-progress'?'status-progress':'status-closed'}" style="float:right">${req.status==='in-progress'?'In Progress':req.status.charAt(0).toUpperCase()+req.status.slice(1)}</span>
+    </div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:10px">${req.title}</div>
+    <div style="font-size:13.5px;color:var(--muted);margin-bottom:16px;line-height:1.65">${req.desc}</div>
+    <div class="divider"></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:18px">By <strong>${req.by}</strong> · Posted ${req.date}</div>
+    ${isOtherUser && req.status==='open' ? `<button class="btn btn-primary btn-full" onclick="closeModal('modal-request-detail');openOfferModal(${req.id})">Offer to Help</button>` : ''}
+    ${!isOtherUser && req.status==='in-progress' ? `<button class="btn btn-primary btn-full" onclick="closeModal('modal-request-detail');markComplete(${req.id})">Mark as Complete</button>` : ''}
+  `;
+  openModal('modal-request-detail');
+}
+
+function openEditProfileModal() {
+  document.getElementById('ep-name').value = currentUser.name;
+  document.getElementById('ep-bio').value = currentUser.bio||'';
+  document.getElementById('ep-role').value = currentUser.role;
+  openModal('modal-edit-profile');
+}
+
+function saveProfile() {
+  currentUser.name = document.getElementById('ep-name').value.trim() || currentUser.name;
+  currentUser.bio = document.getElementById('ep-bio').value.trim();
+  currentUser.role = document.getElementById('ep-role').value;
+  closeModal('modal-edit-profile');
+  updateUserUI();
+  showToast('✅ Profile updated!');
+}
+
+// ═══════════════════════════════
+// MESSAGES
+// ═══════════════════════════════
+function openConvo(id, el) {
+  currentConvo = id;
+  document.querySelectorAll('.msg-convo-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  const c = conversations[id];
+  document.getElementById('msg-main-head').innerHTML = `<div class="avatar" style="width:30px;height:30px;font-size:12px;background:${c.color}">${c.initials}</div> ${c.name}`;
+  renderMessages(id);
+}
+
+function renderMessages(id) {
+  const c = conversations[id];
+  document.getElementById('msg-messages').innerHTML = c.messages.map(m=>`
+    <div>
+      <div class="msg-bubble ${m.from}">${m.text}</div>
+      <div class="msg-time ${m.from}">${m.time}</div>
+    </div>`).join('');
+  const el = document.getElementById('msg-messages');
+  el.scrollTop = el.scrollHeight;
+}
+
+function sendMessage() {
+  const input = document.getElementById('msg-input-box');
+  const text = input.value.trim();
+  if(!text) return;
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  conversations[currentConvo].messages.push({from:'me',text,time:timeStr});
+  input.value = '';
+  renderMessages(currentConvo);
+  // auto reply
+  setTimeout(()=>{
+    const replies = ["Got it! Let me know if you have more questions 😊","Sure, that works for me!","I'll be there. Looking forward to helping!","Sounds great, see you then!"];
+    conversations[currentConvo].messages.push({from:'them',text:replies[Math.floor(Math.random()*replies.length)],time:new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})});
+    renderMessages(currentConvo);
+  },1200);
+}
+
+function handleMsgKey(e) { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); } }
+
+// ═══════════════════════════════
+// TOAST
+// ═══════════════════════════════
+function showToast(msg) {
+  const t = document.createElement('div'); t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3000);
+}
+
+// ═══════════════════════════════
+// INIT
+// ═══════════════════════════════
+renderHomeRequests();
+renderBrowseRequests();
+</script>
+</body>
+</html>
