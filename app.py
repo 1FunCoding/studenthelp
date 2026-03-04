@@ -3,7 +3,8 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
-from datetime import datetime
+import secrets
+from datetime import datetime, timedelta
 from functools import wraps
 
 app = Flask(__name__, static_folder="static")
@@ -148,6 +149,14 @@ def init_db():
         );
     """)
     db.commit()
+
+    # Add password-reset columns if they don't exist yet (safe migration)
+    for col in ("reset_token TEXT", "reset_token_expiry TEXT"):
+        try:
+            db.execute(f"ALTER TABLE users ADD COLUMN {col}")
+            db.commit()
+        except Exception:
+            pass
 
     # Seed demo data only on first run
     if db.execute("SELECT COUNT(*) as c FROM users").fetchone()["c"] == 0:
@@ -333,6 +342,54 @@ def me():
     return jsonify({"user": dict(user)})
 
 
+@app.route("/api/auth/forgot-password", methods=["POST"])
+def forgot_password():
+    data  = request.json or {}
+    email = (data.get("email") or "").strip().lower()
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    user = query("SELECT id FROM users WHERE email=?", (email,), one=True)
+    # Always return 200 so we don't leak whether the email exists
+    if not user:
+        return jsonify({"ok": True, "message": "If that email is registered you will receive a reset code."})
+
+    token  = secrets.token_hex(4).upper()   # 8-char hex code, easy to type
+    expiry = (datetime.utcnow() + timedelta(minutes=15)).isoformat()
+    execute(
+        "UPDATE users SET reset_token=?, reset_token_expiry=? WHERE id=?",
+        (token, expiry, user["id"]),
+    )
+    # In production this token would be emailed; here we return it so the UI can display it.
+    return jsonify({"ok": True, "token": token})
+
+
+@app.route("/api/auth/reset-password", methods=["POST"])
+def reset_password():
+    data         = request.json or {}
+    token        = (data.get("token") or "").strip().upper()
+    new_password = data.get("new_password") or ""
+
+    if not token or not new_password:
+        return jsonify({"error": "Token and new password are required"}), 400
+    if len(new_password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters"}), 400
+
+    user = query("SELECT id, reset_token_expiry FROM users WHERE reset_token=?", (token,), one=True)
+    if not user:
+        return jsonify({"error": "Invalid or expired reset code"}), 400
+
+    expiry = user["reset_token_expiry"]
+    if not expiry or datetime.utcnow() > datetime.fromisoformat(expiry):
+        return jsonify({"error": "Reset code has expired. Please request a new one."}), 400
+
+    execute(
+        "UPDATE users SET password_hash=?, reset_token=NULL, reset_token_expiry=NULL WHERE id=?",
+        (generate_password_hash(new_password), user["id"]),
+    )
+    return jsonify({"ok": True})
+
+
 # ─── REQUESTS ──────────────────────────────────────────────────────────────────
 
 @app.route("/api/requests")
@@ -356,8 +413,13 @@ def get_requests():
             args.append(current)
 
     if search:
-        sql += " AND (r.title LIKE ? OR r.description LIKE ?)"
-        args += [f"%{search}%", f"%{search}%"]
+        # Split into individual words so every word must appear somewhere in
+        # the title or description (AND logic), making multi-word queries like
+        # "Operating System" match even when words are non-consecutive.
+        words = [w.strip() for w in search.split() if w.strip()]
+        for word in words:
+            sql += " AND (r.title LIKE ? OR r.description LIKE ?)"
+            args += [f"%{word}%", f"%{word}%"]
     if subject:
         sql += " AND r.subject=?"
         args.append(subject)
@@ -638,6 +700,17 @@ def send_message(convo_id):
         "SELECT m.*,u.name as sender_name FROM messages m JOIN users u ON m.sender_id=u.id WHERE m.id=?",
         (cur.lastrowid,), one=True,
     )
+
+    # Notify the other participant
+    other_id = convo["user2_id"] if convo["user1_id"] == current else convo["user1_id"]
+    preview  = text[:80] + ("…" if len(text) > 80 else "")
+    push_notif(
+        other_id,
+        "message",
+        f"{msg['sender_name']}: {preview}",
+        convo_id,
+    )
+
     return jsonify({
         "message": {
             "id":          msg["id"],
