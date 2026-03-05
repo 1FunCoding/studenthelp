@@ -147,11 +147,25 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id)
         );
+
+        CREATE TABLE IF NOT EXISTS ratings (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER NOT NULL UNIQUE,
+            rater_id   INTEGER NOT NULL,
+            rated_id   INTEGER NOT NULL,
+            score      INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (session_id) REFERENCES help_sessions(id),
+            FOREIGN KEY (rater_id)   REFERENCES users(id),
+            FOREIGN KEY (rated_id)   REFERENCES users(id)
+        );
     """)
     db.commit()
 
     # Add password-reset columns if they don't exist yet (safe migration)
-    for col in ("reset_token TEXT", "reset_token_expiry TEXT"):
+    for col in ("reset_token TEXT", "reset_token_expiry TEXT",
+                "rating_sum INTEGER NOT NULL DEFAULT 0",
+                "rating_count INTEGER NOT NULL DEFAULT 0"):
         try:
             db.execute(f"ALTER TABLE users ADD COLUMN {col}")
             db.commit()
@@ -184,10 +198,10 @@ def _seed(db):
     sample_reqs = [
         ("Need help with Calculus II homework",
          "Struggling with integration by parts and related problems. Need someone to walk me through a few examples.",
-         "Mathematics", "Tutoring", "high", "online", sarah_id, "open"),
+         "Mathematics", "Tutoring", "high", "online", nina_id, "open"),
         ("Help setting up React project",
          "New to React and need help understanding components and state management. Would love a quick tutorial session.",
-         "Computer Science", "Project Guidance", "medium", "either", mike_id, "open"),
+         "Computer Science", "Project Guidance", "medium", "either", nina_id, "open"),
         ("Moving furniture – need help!",
          "Need help moving some furniture in my dorm room this weekend. Should take about 30 minutes.",
          "Other", "General Assistance", "low", "in-person", emily_id, "open"),
@@ -226,7 +240,7 @@ def _seed(db):
         db.execute("INSERT INTO notifications (user_id,type,message,link_id) VALUES (?,?,?,?)", n)
     db.commit()
 
-    # Seed demo offers so Nina can accept them
+    # Seed demo offers so Nina can accept them (helpers offer on Nina's requests)
     db.execute("INSERT INTO offers (request_id,helper_id,message,availability,status) VALUES (?,?,?,?,?)",
                (1, sarah_id, "I'd love to help! I aced Calc II last semester.", "Evenings after 6pm", "pending"))
     db.execute("INSERT INTO offers (request_id,helper_id,message,availability,status) VALUES (?,?,?,?,?)",
@@ -473,6 +487,10 @@ def delete_request(req_id):
         return jsonify({"error": "Not found"}), 404
     if row["user_id"] != uid():
         return jsonify({"error": "Unauthorized"}), 403
+    # Remove child rows first to satisfy foreign-key constraints
+    execute("DELETE FROM offers WHERE request_id=?", (req_id,))
+    execute("DELETE FROM help_sessions WHERE request_id=?", (req_id,))
+    execute("DELETE FROM notifications WHERE link_id=? AND type='offer_received'", (req_id,))
     execute("DELETE FROM requests WHERE id=?", (req_id,))
     return jsonify({"ok": True})
 
@@ -570,8 +588,23 @@ def accept_offer(offer_id):
         return jsonify({"error": "Not found"}), 404
     if offer["req_owner"] != uid():
         return jsonify({"error": "Unauthorized"}), 403
+    if offer["helper_id"] == uid():
+        return jsonify({"error": "You cannot accept your own offer"}), 400
+
+    # Prevent accepting a second offer if one is already accepted
+    already = query(
+        "SELECT id FROM offers WHERE request_id=? AND status='accepted'",
+        (offer["request_id"],), one=True,
+    )
+    if already:
+        return jsonify({"error": "You have already accepted an offer for this request"}), 409
 
     execute("UPDATE offers SET status='accepted' WHERE id=?", (offer_id,))
+    # Reject all remaining pending offers for this request
+    execute(
+        "UPDATE offers SET status='rejected' WHERE request_id=? AND id!=? AND status='pending'",
+        (offer["request_id"], offer_id),
+    )
     execute("UPDATE requests SET status='in-progress' WHERE id=?", (offer["request_id"],))
     execute(
         "INSERT INTO help_sessions (request_id,requester_id,helper_id,status) VALUES (?,?,?,?)",
@@ -731,15 +764,17 @@ def get_sessions():
     rows = query(
         """
         SELECT s.*, r.title as request_title,
-               u1.name as requester_name, u2.name as helper_name
+               u1.name as requester_name, u2.name as helper_name,
+               rt.score as rating_given
         FROM help_sessions s
         JOIN requests r ON s.request_id=r.id
         JOIN users u1 ON s.requester_id=u1.id
         JOIN users u2 ON s.helper_id=u2.id
+        LEFT JOIN ratings rt ON rt.session_id=s.id AND rt.rater_id=?
         WHERE s.requester_id=? OR s.helper_id=?
         ORDER BY s.created_at DESC
         """,
-        (current, current),
+        (current, current, current),
     )
     return jsonify({"sessions": [dict(r) for r in rows]})
 
@@ -759,6 +794,42 @@ def update_session(session_id):
     if "status" in data:
         execute("UPDATE help_sessions SET status=? WHERE id=?", (data["status"], session_id))
     return jsonify({"ok": True})
+
+
+@app.route("/api/sessions/<int:session_id>/rate", methods=["POST"])
+@login_required
+def rate_session(session_id):
+    current = uid()
+    sess = query(
+        "SELECT * FROM help_sessions WHERE id=? AND requester_id=?",
+        (session_id, current), one=True,
+    )
+    if not sess:
+        return jsonify({"error": "Not found or you are not the requester"}), 404
+    if sess["status"] != "completed":
+        return jsonify({"error": "Session must be completed before rating"}), 400
+
+    data  = request.json or {}
+    score = data.get("score")
+    if score is None or not isinstance(score, int) or not (1 <= score <= 5):
+        return jsonify({"error": "Score must be an integer between 1 and 5"}), 400
+
+    existing = query("SELECT id FROM ratings WHERE session_id=?", (session_id,), one=True)
+    if existing:
+        return jsonify({"error": "Session already rated"}), 409
+
+    helper_id = sess["helper_id"]
+    execute(
+        "INSERT INTO ratings (session_id, rater_id, rated_id, score) VALUES (?,?,?,?)",
+        (session_id, current, helper_id, score),
+    )
+    execute(
+        "UPDATE users SET rating_sum = rating_sum + ?, rating_count = rating_count + 1 WHERE id=?",
+        (score, helper_id),
+    )
+
+    helper = query("SELECT rating_sum, rating_count FROM users WHERE id=?", (helper_id,), one=True)
+    return jsonify({"ok": True, "rating_sum": helper["rating_sum"], "rating_count": helper["rating_count"]})
 
 
 # ─── USERS ─────────────────────────────────────────────────────────────────────
@@ -791,11 +862,23 @@ def update_profile():
 @login_required
 def get_stats():
     current = uid()
+    user = query("SELECT rating_sum, rating_count FROM users WHERE id=?", (current,), one=True)
+    rating_sum   = user["rating_sum"]   if user else 0
+    rating_count = user["rating_count"] if user else 0
+
+    if rating_count > 0:
+        bayesian_rating = round(rating_sum / rating_count, 1)
+    else:
+        bayesian_rating = None
+
     return jsonify({
-        "my_requests":   query("SELECT COUNT(*) as c FROM requests WHERE user_id=?",                     (current,), one=True)["c"],
-        "open_requests": query("SELECT COUNT(*) as c FROM requests WHERE status='open'",                 one=True)["c"],
-        "completed":     query("SELECT COUNT(*) as c FROM requests WHERE user_id=? AND status='closed'", (current,), one=True)["c"],
-        "sessions":      query("SELECT COUNT(*) as c FROM help_sessions WHERE requester_id=? OR helper_id=?", (current, current), one=True)["c"],
+        "my_requests":    query("SELECT COUNT(*) as c FROM requests WHERE user_id=?",                     (current,), one=True)["c"],
+        "open_requests":  query("SELECT COUNT(*) as c FROM requests WHERE status='open'",                 one=True)["c"],
+        "completed":      query("SELECT COUNT(*) as c FROM requests WHERE user_id=? AND status='closed'", (current,), one=True)["c"],
+        "sessions":       query("SELECT COUNT(*) as c FROM help_sessions WHERE requester_id=? OR helper_id=?", (current, current), one=True)["c"],
+        "rating_sum":     rating_sum,
+        "rating_count":   rating_count,
+        "bayesian_rating": bayesian_rating,
     })
 
 

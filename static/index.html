@@ -150,6 +150,8 @@ textarea.form-input{resize:vertical;min-height:90px;line-height:1.6;padding-top:
 .modal-sub{font-size:13px;color:var(--muted);margin-bottom:22px}
 .modal-close{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--muted);transition:.15s}
 .modal-close:hover{background:var(--border);color:var(--text)}
+.star{transition:transform .1s,color .1s;user-select:none;display:inline-block;color:var(--muted)}
+.star:hover,.star.active{color:#f59e0b;transform:scale(1.15)}
 
 /* ── EMPTY STATE ── */
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 20px;gap:12px;color:var(--muted)}
@@ -586,8 +588,9 @@ mark.hl{background:#fef08a;color:inherit;border-radius:3px;padding:0 2px;font-we
             <div style="font-size:12.5px;color:var(--muted);margin-top:4px">Sessions</div>
           </div>
           <div style="background:var(--bg);border-radius:9px;padding:16px;text-align:center">
-            <div style="font-size:26px;font-weight:800;color:var(--green)">N/A</div>
+            <div style="font-size:26px;font-weight:800;color:var(--green)" id="profile-rating">–</div>
             <div style="font-size:12.5px;color:var(--muted);margin-top:4px">Rating</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px" id="profile-rating-count"></div>
           </div>
         </div>
         <div style="margin-bottom:6px;font-size:13px;font-weight:600;color:var(--muted)">Bio</div>
@@ -713,6 +716,32 @@ mark.hl{background:#fef08a;color:inherit;border-radius:3px;padding:0 2px;font-we
       <div style="display:flex;gap:10px;margin-top:6px">
         <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-edit-profile')">Cancel</button>
         <button class="btn btn-primary" style="flex:2" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rate Helper Modal -->
+<div id="modal-rate-helper" style="display:none">
+  <div class="modal-bg" onclick="skipRating()">
+    <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="skipRating()">✕</button>
+      <div class="modal-title">Rate Your Helper</div>
+      <div class="modal-sub" id="rate-helper-subtitle">How was your session?</div>
+      <div style="text-align:center;margin:24px 0 8px">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Tap a star to select your rating</div>
+        <div id="star-row" style="display:flex;justify-content:center;gap:10px;font-size:36px;cursor:pointer">
+          <span class="star" data-v="1" onclick="selectStar(1)">☆</span>
+          <span class="star" data-v="2" onclick="selectStar(2)">☆</span>
+          <span class="star" data-v="3" onclick="selectStar(3)">☆</span>
+          <span class="star" data-v="4" onclick="selectStar(4)">☆</span>
+          <span class="star" data-v="5" onclick="selectStar(5)">☆</span>
+        </div>
+        <div id="star-label" style="font-size:13px;color:var(--muted);margin-top:10px;min-height:18px"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-secondary" style="flex:1" onclick="skipRating()">Skip</button>
+        <button class="btn btn-primary" style="flex:2" id="submit-rating-btn" onclick="submitRating()" disabled>Submit Rating</button>
       </div>
     </div>
   </div>
@@ -849,6 +878,7 @@ let browseRequests = [];
 let myRequestsList = [];
 let conversations  = [];
 let currentConvoId = null;
+const _sessionCache = {};
 let activeView     = 'home';
 
 // ═══════════════════════════════════════════════
@@ -1063,6 +1093,16 @@ async function loadStats() {
     document.getElementById('stat-open').textContent           = d.open_requests;
     document.getElementById('stat-completed').textContent      = d.completed;
     document.getElementById('profile-sessions-count').textContent = d.sessions;
+
+    const ratingEl = document.getElementById('profile-rating');
+    const countEl  = document.getElementById('profile-rating-count');
+    if (d.rating_count > 0) {
+      ratingEl.textContent = d.bayesian_rating.toFixed(1) + ' ★';
+      countEl.textContent  = `${d.rating_count} rating${d.rating_count !== 1 ? 's' : ''}`;
+    } else {
+      ratingEl.textContent = 'New';
+      countEl.textContent  = 'No ratings yet';
+    }
   } catch (_) {}
 }
 
@@ -1202,6 +1242,7 @@ function renderMyRequestsList() {
 }
 
 async function deleteRequest(id) {
+  if (!confirm('Are you sure you want to delete this request? This cannot be undone.')) return;
   try {
     await api('DELETE', `/requests/${id}`);
     await Promise.all([loadMyRequests(), loadBrowseRequests(), loadStats()]);
@@ -1305,23 +1346,33 @@ async function openRequestDetail(id) {
           Offers Received
           <span style="background:var(--accent-bg);color:var(--accent);font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px">${offers.length}</span>
         </div>
-        ${offers.length === 0
+          ${offers.length === 0
           ? `<div style="text-align:center;padding:12px;font-size:13px;color:var(--muted)">No offers yet — share your request to get help!</div>`
-          : offers.map(o => `
-            <div style="background:var(--bg);border-radius:9px;padding:13px 14px;margin-bottom:8px;border:1.5px solid ${o.status === 'accepted' ? 'var(--green)' : 'var(--border)'}">
+          : offers.map(o => {
+              const borderColor = o.status === 'accepted' ? 'var(--green)' : o.status === 'rejected' ? 'var(--border)' : 'var(--border)';
+              const opacityStyle = o.status === 'rejected' ? 'opacity:.45;' : '';
+              let actionHtml;
+              if (o.status === 'accepted') {
+                actionHtml = `<span class="tag tag-green">Accepted ✓</span>`;
+              } else if (o.status === 'rejected') {
+                actionHtml = `<span class="tag tag-gray">Declined</span>`;
+              } else if (req.status === 'open') {
+                actionHtml = `<button class="btn btn-primary btn-sm" onclick="acceptOffer(${o.id},${req.id})">Accept ✓</button>`;
+              } else {
+                actionHtml = '';
+              }
+              return `
+            <div style="background:var(--bg);border-radius:9px;padding:13px 14px;margin-bottom:8px;border:1.5px solid ${borderColor};${opacityStyle}">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
                 <div style="flex:1;min-width:0">
                   <div style="font-weight:700;font-size:13.5px;margin-bottom:4px">${esc(o.helper_name)}</div>
                   <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:${o.availability ? '4px' : '0'}">${esc(o.message)}</div>
                   ${o.availability ? `<div style="font-size:12px;color:var(--muted)">⏰ ${esc(o.availability)}</div>` : ''}
                 </div>
-                <div style="flex-shrink:0">
-                  ${o.status === 'pending'
-                    ? `<button class="btn btn-primary btn-sm" onclick="acceptOffer(${o.id},${req.id})">Accept ✓</button>`
-                    : `<span class="tag tag-green">Accepted ✓</span>`}
-                </div>
+                <div style="flex-shrink:0">${actionHtml}</div>
               </div>
-            </div>`).join('')
+            </div>`;
+            }).join('')
         }`;
     } catch (_) {}
   }
@@ -1549,6 +1600,7 @@ function startMsgPolling() {
 async function loadSessions() {
   try {
     const d        = await api('GET', '/sessions');
+    d.sessions.forEach(s => { _sessionCache[s.id] = s; });
     const upcoming = d.sessions.filter(s => s.status === 'upcoming');
     const past     = d.sessions.filter(s => s.status !== 'upcoming');
 
@@ -1565,21 +1617,34 @@ async function loadSessions() {
 }
 
 function renderSessionCard(s, isPast) {
-  const isHelper = currentUser && s.helper_id === currentUser.id;
+  const isHelper    = currentUser && s.helper_id === currentUser.id;
+  const isRequester = currentUser && s.requester_id === currentUser.id;
+  const alreadyRated = s.rating_given != null;
+
+  let pastActions = '';
+  if (isPast && isRequester) {
+    if (alreadyRated) {
+      const stars = '★'.repeat(s.rating_given) + '☆'.repeat(5 - s.rating_given);
+      pastActions = `<div style="font-size:13px;color:#f59e0b;margin-top:8px">${stars} <span style="color:var(--muted);font-size:12px">You rated ${s.rating_given}/5</span></div>`;
+    } else {
+      pastActions = `<button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="openRatingModal(${s.id}, '${esc(s.helper_name)}')">⭐ Rate Helper</button>`;
+    }
+  }
+
   return `
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-weight:700;font-size:14.5px">${esc(s.request_title || 'Session')}</div>
         <span class="${isPast ? 'status-closed' : 'status-progress'}">${isPast ? 'Completed' : 'Upcoming'}</span>
       </div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:${isPast ? '0' : '10px'}">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:${(isPast && !pastActions) ? '0' : '8px'}">
         ${isHelper
           ? `Helping: <strong>${esc(s.requester_name)}</strong>`
           : `Helper: <strong>${esc(s.helper_name)}</strong>`}
       </div>
       ${!isPast
         ? `<button class="btn btn-secondary btn-sm" onclick="completeSession(${s.id})">Mark as Complete</button>`
-        : ''}
+        : pastActions}
     </div>`;
 }
 
@@ -1589,7 +1654,62 @@ async function completeSession(id) {
     await loadSessions();
     await loadStats();
     showToast('✅ Session marked as complete!');
+    const s = _sessionCache[id];
+    if (s && currentUser && s.requester_id === currentUser.id) {
+      openRatingModal(id, s.helper_name);
+    }
   } catch (e) { showToast('⚠️ ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════
+// RATING
+// ═══════════════════════════════════════════════
+let _ratingSessionId  = null;
+let _ratingScore      = 0;
+const STAR_LABELS     = ['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'];
+
+function openRatingModal(sessionId, helperName) {
+  _ratingSessionId = sessionId;
+  _ratingScore     = 0;
+  document.getElementById('rate-helper-subtitle').textContent =
+    `How was your session with ${helperName}?`;
+  document.getElementById('star-label').textContent = '';
+  document.getElementById('submit-rating-btn').disabled = true;
+  document.querySelectorAll('.star').forEach(s => {
+    s.textContent = '☆';
+    s.classList.remove('active');
+  });
+  document.getElementById('modal-rate-helper').style.display = 'flex';
+}
+
+function selectStar(value) {
+  _ratingScore = value;
+  document.querySelectorAll('.star').forEach(s => {
+    const v = parseInt(s.dataset.v, 10);
+    s.textContent = v <= value ? '★' : '☆';
+    s.classList.toggle('active', v <= value);
+  });
+  document.getElementById('star-label').textContent = STAR_LABELS[value] || '';
+  document.getElementById('submit-rating-btn').disabled = false;
+}
+
+async function submitRating() {
+  if (!_ratingSessionId || !_ratingScore) return;
+  try {
+    await api('POST', `/sessions/${_ratingSessionId}/rate`, { score: _ratingScore });
+    document.getElementById('modal-rate-helper').style.display = 'none';
+    await loadStats();
+    await loadSessions();
+    showToast('⭐ Rating submitted — thank you!');
+  } catch (e) {
+    showToast('⚠️ ' + e.message);
+  }
+}
+
+function skipRating() {
+  document.getElementById('modal-rate-helper').style.display = 'none';
+  _ratingSessionId = null;
+  _ratingScore     = 0;
 }
 
 // ═══════════════════════════════════════════════
