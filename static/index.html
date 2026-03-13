@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudentHelp</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f2efff;
+  --surface:#ffffff;
+  --border:#e0daf5;
+  --text:#09070f;
+  --muted:#6c6880;
+  --accent:#7c3aed;
+  --accent-dark:#6d28d9;
+  --accent-bg:#f3effe;
+  --accent-light:#c4b5fd;
+  --green:#059669;
+  --green-bg:#d1fae5;
+  --amber:#d97706;
+  --amber-bg:#fef3c7;
+  --red:#e11d48;
+  --red-bg:#ffe4e6;
+  --purple:#9333ea;
+  --purple-bg:#f3e8ff;
+  --radius:12px;
+  --shadow:0 1px 4px rgba(9,7,15,.06),0 4px 20px rgba(9,7,15,.05);
+  --shadow-lg:0 8px 40px rgba(9,7,15,.14);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* ── SCREEN SYSTEM ── */
+.screen{display:none;min-height:100vh;animation:fadeIn .2s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── NAV ── */
+nav.topnav{background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 40px;display:flex;align-items:center;gap:0;height:62px;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 var(--border)}
+.nav-logo{display:flex;align-items:center;gap:9px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:17px;color:var(--text);margin-right:36px;cursor:pointer;flex-shrink:0;letter-spacing:-.3px}
+.nav-links{display:flex;align-items:center;gap:2px;flex:1}
+.nav-link{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:.15s;white-space:nowrap;border:none;background:none}
+.nav-link:hover{background:var(--accent-bg);color:var(--accent)}
+.nav-link.active{color:var(--accent);background:var(--accent-bg);font-weight:600}
+.nav-link .badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:2px}
+.nav-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,.35)}
+.btn-logout{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:none;transition:.15s}
+.btn-logout:hover{background:var(--red-bg);color:var(--red)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 20px;border-radius:9px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:.18s;border:none;white-space:nowrap;letter-spacing:-.1px}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 2px 8px rgba(124,58,237,.25)}
+.btn-primary:hover{background:linear-gradient(135deg,#6d28d9,#5b21b6);transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.38)}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.btn-ghost{background:none;color:var(--accent);border:none;padding:8px 12px}
+.btn-ghost:hover{background:var(--accent-bg)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid #fda4af}
+.btn-danger:hover{background:var(--red);color:#fff}
+.btn-lg{padding:13px 28px;font-size:15px;border-radius:10px}
+.btn-sm{padding:6px 13px;font-size:12.5px;border-radius:7px}
+.btn-full{width:100%}
+
+/* ── FORM ── */
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:6px;letter-spacing:.1px}
+.form-input{width:100%;padding:11px 14px 11px 40px;border:1.5px solid var(--border);border-radius:9px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--surface);transition:.15s;outline:none}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,.12)}
+.form-input.no-icon{padding-left:14px}
+.input-wrap{position:relative}
+.input-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+select.form-input{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+textarea.form-input{resize:vertical;min-height:90px;line-height:1.6;padding-top:11px}
+
+/* ── RADIO CARDS ── */
+.role-options{display:flex;flex-direction:column;gap:10px}
+.role-card{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:.15s}
+.role-card:hover{border-color:var(--accent);background:var(--accent-bg)}
+.role-card.selected{border-color:var(--accent);background:var(--accent-bg)}
+.role-radio{width:18px;height:18px;border:2px solid var(--border);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s}
+.role-card.selected .role-radio{border-color:var(--accent)}
+.role-radio-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;display:none}
+.role-card.selected .role-radio-dot{display:block}
+.role-card-text strong{font-size:14px;font-weight:600;display:block}
+.role-card-text span{font-size:12.5px;color:var(--muted)}
+
+/* ── TAGS ── */
+.tag{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:6px;white-space:nowrap}
+.tag-blue{background:#dbeafe;color:#1d4ed8}
+.tag-green{background:#dcfce7;color:#15803d}
+.tag-amber{background:#fef3c7;color:#b45309}
+.tag-red{background:#fee2e2;color:#b91c1c}
+.tag-gray{background:#f1f5f9;color:#475569}
+.tag-purple{background:#ede9fe;color:#6d28d9}
+.status-open{background:#dcfce7;color:#15803d;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600}
+.status-progress{background:#fef3c7;color:#b45309;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600}
+.status-closed{background:#f1f5f9;color:#64748b;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600}
+.priority-high{background:#fee2e2;color:#b91c1c}
+.priority-medium{background:#fef3c7;color:#b45309}
+.priority-low{background:#f0fdf4;color:#166534}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;transition:box-shadow .2s,border-color .2s,transform .2s}
+.card:hover{box-shadow:var(--shadow)}
+.card-clickable{cursor:pointer}
+.card-clickable:hover{border-color:var(--accent-light);transform:translateY(-1px)}
+
+/* ── STAT CARDS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:flex;align-items:center;gap:14px}
+.stat-icon{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.stat-val{font-size:26px;font-weight:800;line-height:1;font-family:'Plus Jakarta Sans',sans-serif}
+.stat-lbl{font-size:12.5px;color:var(--muted);margin-top:3px;font-weight:500}
+
+/* ── REQUEST CARD ── */
+.req-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all .2s}
+.req-card:hover{border-color:var(--accent-light);box-shadow:var(--shadow);transform:translateY(-1px)}
+.req-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.req-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.req-title{font-size:15.5px;font-weight:700;margin-bottom:5px}
+.req-desc{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:10px}
+.req-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+
+/* ── AUTH SCREEN ── */
+#screen-auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at 65% 25%, #4c1d95 0%, #1e1b4b 50%, #0d0b1f 100%)}
+.auth-container{background:rgba(255,255,255,.97);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.5);border-radius:20px;padding:36px;width:100%;max-width:440px;box-shadow:0 24px 64px rgba(0,0,0,.35)}
+.auth-title{text-align:center;font-size:22px;font-weight:800;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif}
+.auth-sub{text-align:center;font-size:13.5px;color:var(--muted);margin-bottom:28px}
+.auth-switch{text-align:center;margin-top:18px;font-size:13px;color:var(--muted)}
+.auth-switch a{color:var(--accent);font-weight:600;cursor:pointer;text-decoration:none}
+.auth-tabs{display:flex;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:24px}
+.auth-tab{flex:1;padding:8px;border-radius:8px;text-align:center;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--muted);transition:.15s}
+.auth-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(9,7,15,.12)}
+
+/* ── HERO BANNER ── */
+.hero{background:linear-gradient(135deg,#4c1d95 0%,#7c3aed 55%,#4f46e5 100%);border-radius:16px;padding:30px 34px;color:#fff;margin-bottom:24px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;right:-30px;top:-30px;width:200px;height:200px;background:rgba(255,255,255,.07);border-radius:50%}
+.hero::before{content:'';position:absolute;right:80px;bottom:-50px;width:240px;height:240px;background:rgba(255,255,255,.04);border-radius:50%}
+.hero h2{font-size:22px;font-weight:800;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif}
+.hero p{font-size:14px;opacity:.88;margin-bottom:18px}
+.hero .btn{background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.35);backdrop-filter:blur(6px)}
+.hero .btn:hover{background:rgba(255,255,255,.28);transform:translateY(-1px)}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(15,17,23,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);animation:fadeIn .15s ease}
+.modal{background:var(--surface);border-radius:16px;padding:28px;width:100%;max-width:520px;box-shadow:var(--shadow-lg);position:relative;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:22px}
+.modal-close{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--muted);transition:.15s}
+.modal-close:hover{background:var(--border);color:var(--text)}
+.star{transition:transform .1s,color .1s;user-select:none;display:inline-block;color:var(--muted)}
+.star:hover,.star.active{color:#f59e0b;transform:scale(1.15)}
+
+/* ── EMPTY STATE ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 20px;gap:12px;color:var(--muted)}
+.empty-icon{font-size:42px;opacity:.4}
+.empty h3{font-size:15px;font-weight:700;color:var(--text)}
+.empty p{font-size:13px;text-align:center}
+
+/* ── MESSAGES ── */
+.msg-layout{display:grid;grid-template-columns:280px 1fr;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);overflow:hidden;height:580px;max-height:calc(100vh - 200px)}
+.msg-sidebar{border-right:1px solid var(--border);overflow-y:auto;min-height:0}
+.msg-sidebar-head{padding:16px 18px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px}
+.msg-convo-item{padding:14px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:.12s}
+.msg-convo-item:hover{background:var(--bg)}
+.msg-convo-item.active{background:var(--accent-bg);border-left:3px solid var(--accent)}
+.msg-convo-name{font-weight:600;font-size:13.5px}
+.msg-convo-preview{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg-main{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.msg-main-head{padding:16px 20px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px;display:flex;align-items:center;gap:10px;min-height:57px}
+.msg-messages{flex:1;min-height:0;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.msg-bubble{max-width:68%;padding:10px 14px;border-radius:12px;font-size:13.5px;line-height:1.55}
+.msg-bubble.them{background:var(--bg);border-bottom-left-radius:3px;align-self:flex-start}
+.msg-bubble.me{background:var(--accent);color:#fff;border-bottom-right-radius:3px;align-self:flex-end}
+.msg-time{font-size:11px;color:var(--muted);margin-top:2px}
+.msg-time.me{text-align:right;color:rgba(255,255,255,.6)}
+.msg-input-area{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:flex-end}
+.msg-input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13.5px;outline:none;resize:none;max-height:100px;min-height:40px}
+.msg-input:focus{border-color:var(--accent)}
+
+/* ── PAGE CONTAINER ── */
+.page-wrap{max-width:1060px;margin:0 auto;padding:32px 24px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-title{font-size:24px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:-.4px}
+.page-sub{font-size:13.5px;color:var(--muted);margin-top:2px}
+
+/* ── PROFILE ── */
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-weight:800;font-size:26px;display:flex;align-items:center;justify-content:center;margin-right:18px;flex-shrink:0}
+
+/* ── HOW IT WORKS ── */
+.how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;text-align:center}
+.how-step-num{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;margin:0 auto 12px}
+.how-step-title{font-weight:700;font-size:14px;margin-bottom:6px}
+.how-step-desc{font-size:12.5px;color:var(--muted);line-height:1.55}
+
+/* ── OFFER FORM ── */
+.offer-req-title{background:var(--bg);border-radius:9px;padding:12px 14px;margin-bottom:18px;font-size:13.5px;font-weight:600;border-left:3px solid var(--accent)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:#0d0b1f;color:#fff;padding:12px 18px;border-radius:10px;font-size:13.5px;font-weight:500;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,.3);animation:slideUp .25s ease;display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.08)}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── NOTIFICATION POPUP ── */
+#notif-popup-container{position:fixed;top:74px;right:20px;z-index:600;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.notif-popup{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:12px;padding:14px 14px 14px 16px;width:320px;box-shadow:var(--shadow-lg);display:flex;align-items:flex-start;gap:12px;pointer-events:all;animation:slideInRight .3s cubic-bezier(.16,1,.3,1);cursor:pointer;transition:opacity .2s,transform .2s}
+.notif-popup:hover{background:var(--accent-bg)}
+.notif-popup.removing{opacity:0;transform:translateX(20px)}
+.notif-popup-icon{font-size:22px;flex-shrink:0;margin-top:1px}
+.notif-popup-body{flex:1;min-width:0}
+.notif-popup-msg{font-size:13px;font-weight:600;color:var(--text);line-height:1.45}
+.notif-popup-time{font-size:11.5px;color:var(--muted);margin-top:3px}
+.notif-popup-close{flex-shrink:0;width:22px;height:22px;border-radius:50%;border:none;background:var(--bg);color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;line-height:1}
+.notif-popup-close:hover{background:var(--border);color:var(--text)}
+@keyframes slideInRight{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── SEARCH HIGHLIGHT ── */
+mark.hl{background:#fef08a;color:inherit;border-radius:3px;padding:0 2px;font-weight:inherit}
+
+/* ── FILTER BAR ── */
+.filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:20px}
+.filter-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.filter-search{flex:1;min-width:220px}
+.filter-selects{display:flex;gap:10px;flex-wrap:wrap}
+.filter-select{padding:9px 32px 9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text);background:var(--surface);cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:.15s}
+.filter-select:focus{border-color:var(--accent)}
+
+/* ── SECTION HEAD ── */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-size:16px;font-weight:700}
+
+/* divider */
+.divider{height:1px;background:var(--border);margin:18px 0}
+
+/* notification dot */
+.notif-dot{width:8px;height:8px;background:var(--red);border-radius:50%;display:inline-block;margin-left:2px}
+
+/* loading spinner */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(124,58,237,.18);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- Shared SVG gradient defs (referenced by both logo instances) -->
+<svg style="display:none" aria-hidden="true">
+  <defs>
+    <linearGradient id="brand-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9333ea"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<!-- ═══════════════════════════════════════════
+     AUTH SCREEN
+═══════════════════════════════════════════ -->
+<div class="screen active" id="screen-auth">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="display:inline-flex;align-items:center;gap:10px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:24px;color:#fff;letter-spacing:-.4px">
+        <!-- Logo mark: gradient rounded-square + lightning bolt -->
+        <svg width="38" height="38" viewBox="0 0 32 32" fill="none" style="flex-shrink:0">
+          <rect width="32" height="32" rx="9" fill="url(#brand-grad)"/>
+          <path d="M20 5L10 18h8l-4 9L23 14h-8z" fill="white"/>
+        </svg>
+        StudentHelp
+      </div>
+      <div style="color:rgba(255,255,255,.55);font-size:13px;margin-top:6px">Your campus peer-help network</div>
+    </div>
+    <div class="auth-container">
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</div>
+        <div class="auth-tab" id="tab-login" onclick="switchAuthTab('login')">Sign In</div>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="auth-signup">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input class="form-input" id="reg-name" type="text" placeholder="Your full name">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <input class="form-input" id="reg-email" type="email" placeholder="you@university.edu">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input class="form-input" id="reg-pass" type="password" placeholder="Create a password">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">I want to:</label>
+          <div class="role-options" id="role-options">
+            <div class="role-card selected" data-role="requester" onclick="selectRole(this)">
+              <div class="role-radio"><div class="role-radio-dot"></div></div>
+              <div class="role-card-text"><strong>Request Help</strong><span>I need assistance with my studies</span></div>
+            </div>
+            <div class="role-card" data-role="helper" onclick="selectRole(this)">
+              <div class="role-radio"><div class="role-radio-dot"></div></div>
+              <div class="role-card-text"><strong>Offer Help</strong><span>I want to help other students</span></div>
+            </div>
+            <div class="role-card" data-role="both" onclick="selectRole(this)">
+              <div class="role-radio"><div class="role-radio-dot"></div></div>
+              <div class="role-card-text"><strong>Both</strong><span>I want to request and offer help</span></div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="doRegister()">Sign Up</button>
+        <div class="auth-switch">Already have an account? <a onclick="switchAuthTab('login')">Log in</a></div>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="auth-login" style="display:none">
+        <div style="background:var(--accent-bg);border:1px solid var(--accent-light);border-radius:9px;padding:10px 14px;margin-bottom:20px;font-size:13px;color:var(--accent)">
+          Demo: <strong>nina@scu.edu</strong> / <strong>password</strong>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <input class="form-input" id="login-email" type="email" placeholder="you@university.edu" value="nina@scu.edu">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input class="form-input" id="login-pass" type="password" placeholder="Your password" value="password">
+          </div>
+        </div>
+        <div style="text-align:right;margin-bottom:18px"><a style="font-size:13px;color:var(--accent);font-weight:600;cursor:pointer" onclick="openForgotPassword()">Forgot password?</a></div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="doLogin()">Sign In</button>
+        <div class="auth-switch">Don't have an account? <a onclick="switchAuthTab('signup')">Sign up</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN APP
+═══════════════════════════════════════════ -->
+<div class="screen" id="screen-app">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="goTo('home')">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none" style="flex-shrink:0">
+        <rect width="32" height="32" rx="8" fill="url(#brand-grad)"/>
+        <path d="M20 5L10 18h8l-4 9L23 14h-8z" fill="white"/>
+      </svg>
+      StudentHelp
+    </div>
+    <div class="nav-links">
+      <button class="nav-link active" id="nav-home" onclick="goTo('home')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </button>
+      <button class="nav-link" id="nav-browse" onclick="goTo('browse')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Browse Requests
+      </button>
+      <button class="nav-link" id="nav-myrequests" onclick="goTo('myrequests')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        My Requests
+      </button>
+      <button class="nav-link" id="nav-sessions" onclick="goTo('sessions')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Sessions
+      </button>
+      <button class="nav-link" id="nav-messages" onclick="goTo('messages')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Messages
+        <span class="badge" id="msg-badge" style="display:none">!</span>
+      </button>
+      <button class="nav-link" id="nav-profile" onclick="goTo('profile')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </button>
+    </div>
+    <div class="nav-right">
+      <div style="position:relative">
+        <button class="btn-logout" id="notif-btn" onclick="toggleNotifPanel()" title="Notifications" style="padding:7px 10px">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <span id="notif-count" style="display:none;position:absolute;top:3px;right:3px;background:var(--red);color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:99px;pointer-events:none;line-height:16px;text-align:center;padding:0 3px">0</span>
+      </div>
+      <div class="avatar" id="nav-avatar" onclick="goTo('profile')">?</div>
+      <button class="btn-logout" onclick="doLogout()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+    </div>
+  </nav>
+
+  <!-- HOME -->
+  <div id="view-home" style="display:block">
+    <div class="page-wrap">
+      <div class="hero">
+        <h2 id="hero-greeting">Welcome back! 👋</h2>
+        <p>Need help with your studies? We're here for you.</p>
+        <button class="btn" onclick="openNewRequestModal()">Create Help Request →</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#eff4ff">📋</div>
+          <div><div class="stat-val" id="stat-myrequests">–</div><div class="stat-lbl">My Requests</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#f0fdf4">📅</div>
+          <div><div class="stat-val" id="stat-sessions">–</div><div class="stat-lbl">Sessions</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fef3c7">👥</div>
+          <div><div class="stat-val" id="stat-open">–</div><div class="stat-lbl">Open Requests</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fce7f3">✅</div>
+          <div><div class="stat-val" id="stat-completed">–</div><div class="stat-lbl">Completed</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="section-head">
+          <div class="section-title">Recent Requests</div>
+          <button class="btn btn-ghost btn-sm" onclick="goTo('browse')">View all →</button>
+        </div>
+        <div id="home-recent-requests"><div style="text-align:center;padding:20px;color:var(--muted)"><span class="spinner"></span></div></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:20px">How It Works</div>
+        <div class="how-steps">
+          <div>
+            <div class="how-step-num" style="background:#dbeafe;color:#1d4ed8">1</div>
+            <div class="how-step-title">Post or Browse</div>
+            <div class="how-step-desc">Post a request describing what help you need, or browse existing requests to offer your help</div>
+          </div>
+          <div>
+            <div class="how-step-num" style="background:#dcfce7;color:#15803d">2</div>
+            <div class="how-step-title">Connect</div>
+            <div class="how-step-desc">Helpers submit offers and requesters review and accept the best match</div>
+          </div>
+          <div>
+            <div class="how-step-num" style="background:#ede9fe;color:#6d28d9">3</div>
+            <div class="how-step-title">Get Help</div>
+            <div class="how-step-desc">Schedule a session, coordinate details, and achieve your goals together</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BROWSE -->
+  <div id="view-browse" style="display:none">
+    <div class="page-wrap">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Browse Help Requests</div>
+          <div class="page-sub">Find students who need your help</div>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="filter-search input-wrap" style="flex:1;min-width:200px;position:relative">
+            <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="form-input" id="browse-search" placeholder="Search by keywords, e.g. Operating System..." oninput="debouncedFilter()" onkeydown="if(event.key==='Escape'){clearSearch()}">
+            <button id="search-clear-btn" onclick="clearSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;line-height:1;padding:2px 4px" title="Clear search">✕</button>
+          </div>
+          <div class="filter-selects">
+            <select class="filter-select" id="filter-subject" onchange="filterRequests()">
+              <option value="">All Subjects</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Biology">Biology</option>
+              <option value="English">English</option>
+              <option value="Other">Other</option>
+            </select>
+            <select class="filter-select" id="filter-urgency" onchange="filterRequests()">
+              <option value="">All Urgencies</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="browse-count" style="font-size:13px;color:var(--muted);margin-bottom:14px"></div>
+      <div id="browse-list"><div style="text-align:center;padding:40px;color:var(--muted)"><span class="spinner"></span></div></div>
+    </div>
+  </div>
+
+  <!-- MY REQUESTS -->
+  <div id="view-myrequests" style="display:none">
+    <div class="page-wrap">
+      <div class="page-header">
+        <div>
+          <div class="page-title">My Requests</div>
+          <div class="page-sub">Manage your help requests</div>
+        </div>
+        <button class="btn btn-primary" onclick="openNewRequestModal()">+ New Request</button>
+      </div>
+      <div id="my-requests-list"><div style="text-align:center;padding:40px;color:var(--muted)"><span class="spinner"></span></div></div>
+    </div>
+  </div>
+
+  <!-- SESSIONS -->
+  <div id="view-sessions" style="display:none">
+    <div class="page-wrap">
+      <div class="page-header">
+        <div>
+          <div class="page-title">My Sessions</div>
+          <div class="page-sub">View and manage your tutoring sessions</div>
+        </div>
+      </div>
+      <div class="section-title" style="margin-bottom:14px">Upcoming Sessions</div>
+      <div id="upcoming-sessions"><div style="text-align:center;padding:30px;color:var(--muted)"><span class="spinner"></span></div></div>
+      <div class="section-title" style="margin-bottom:14px;margin-top:24px">Past Sessions</div>
+      <div id="past-sessions"></div>
+    </div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div id="view-messages" style="display:none">
+    <div class="page-wrap">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Messages</div>
+          <div class="page-sub">Communicate with students</div>
+        </div>
+      </div>
+      <div class="msg-layout">
+        <div class="msg-sidebar">
+          <div class="msg-sidebar-head">Conversations</div>
+          <!-- Populated by JS -->
+        </div>
+        <div class="msg-main" id="msg-main-area">
+          <div class="msg-main-head" id="msg-main-head"></div>
+          <div class="msg-messages" id="msg-messages">
+            <div class="empty" style="height:100%">
+              <div class="empty-icon">💬</div>
+              <p>Select a conversation to start chatting</p>
+            </div>
+          </div>
+          <div class="msg-input-area">
+            <textarea class="msg-input" id="msg-input-box" placeholder="Type a message..." rows="1" onkeydown="handleMsgKey(event)"></textarea>
+            <button class="btn btn-primary btn-sm" onclick="sendMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="view-profile" style="display:none">
+    <div class="page-wrap">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Profile</div>
+          <div class="page-sub">Manage your account information</div>
+        </div>
+        <button class="btn btn-primary" onclick="openEditProfileModal()">✏️ Edit Profile</button>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;margin-bottom:20px">
+          <div class="profile-avatar" id="profile-avatar">?</div>
+          <div>
+            <div style="font-size:20px;font-weight:800" id="profile-name">–</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+              <span style="font-size:13px;color:var(--muted)" id="profile-email"></span>
+              <span class="tag tag-blue" id="profile-role-tag">–</span>
+            </div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+          <div style="background:var(--bg);border-radius:9px;padding:16px;text-align:center">
+            <div style="font-size:26px;font-weight:800;color:var(--accent)" id="profile-sessions-count">–</div>
+            <div style="font-size:12.5px;color:var(--muted);margin-top:4px">Sessions</div>
+          </div>
+          <div style="background:var(--bg);border-radius:9px;padding:16px;text-align:center">
+            <div style="font-size:26px;font-weight:800;color:var(--green)" id="profile-rating">–</div>
+            <div style="font-size:12.5px;color:var(--muted);margin-top:4px">Rating</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px" id="profile-rating-count"></div>
+          </div>
+        </div>
+        <div style="margin-bottom:6px;font-size:13px;font-weight:600;color:var(--muted)">Bio</div>
+        <div id="profile-bio" style="font-size:14px;color:var(--muted);font-style:italic">No bio provided</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#screen-app -->
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- New Request Modal -->
+<div id="modal-new-request" style="display:none">
+  <div class="modal-bg" onclick="closeModal('modal-new-request')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-new-request')">✕</button>
+      <div class="modal-title">Create Help Request</div>
+      <div class="modal-sub">Describe what you need help with</div>
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input class="form-input no-icon" id="nr-title" type="text" placeholder="e.g. Need help with Calculus II homework">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-input no-icon" id="nr-desc" placeholder="Describe what you need help with..."></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group">
+          <label class="form-label">Subject</label>
+          <select class="form-input no-icon" id="nr-subject">
+            <option>Mathematics</option>
+            <option>Computer Science</option>
+            <option>Physics</option>
+            <option>Chemistry</option>
+            <option>Biology</option>
+            <option>English</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Urgency</label>
+          <select class="form-input no-icon" id="nr-urgency">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Format</label>
+        <select class="form-input no-icon" id="nr-format">
+          <option value="online">Online</option>
+          <option value="in-person">In-Person</option>
+          <option value="either">Either</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-new-request')">Cancel</button>
+        <button class="btn btn-primary" style="flex:2" id="btn-submit-req" onclick="submitNewRequest()">Post Request</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Offer Modal -->
+<div id="modal-offer" style="display:none">
+  <div class="modal-bg" onclick="closeModal('modal-offer')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-offer')">✕</button>
+      <div class="modal-title">Submit an Offer</div>
+      <div class="modal-sub">Tell the requester how you can help</div>
+      <div class="offer-req-title" id="offer-req-title">Loading...</div>
+      <div class="form-group">
+        <label class="form-label">Your Message</label>
+        <textarea class="form-input no-icon" id="offer-msg" rows="4" placeholder="Introduce yourself and explain how you can help..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Availability</label>
+        <input class="form-input no-icon" id="offer-avail" type="text" placeholder="e.g. Weekdays after 5pm, anytime weekends">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-offer')">Cancel</button>
+        <button class="btn btn-primary" style="flex:2" id="btn-submit-offer" onclick="submitOffer()">Send Offer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Request Detail Modal -->
+<div id="modal-request-detail" style="display:none">
+  <div class="modal-bg" onclick="closeModal('modal-request-detail')">
+    <div class="modal" style="max-width:560px" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-request-detail')">✕</button>
+      <div id="modal-detail-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="modal-edit-profile" style="display:none">
+  <div class="modal-bg" onclick="closeModal('modal-edit-profile')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-edit-profile')">✕</button>
+      <div class="modal-title">Edit Profile</div>
+      <div class="modal-sub">Update your account information</div>
+      <div class="form-group">
+        <label class="form-label">Display Name</label>
+        <input class="form-input no-icon" id="ep-name" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bio</label>
+        <textarea class="form-input no-icon" id="ep-bio" rows="3" placeholder="Tell others about yourself..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-input no-icon" id="ep-role">
+          <option value="requester">Requester</option>
+          <option value="helper">Helper</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-edit-profile')">Cancel</button>
+        <button class="btn btn-primary" style="flex:2" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rate Helper Modal -->
+<div id="modal-rate-helper" style="display:none">
+  <div class="modal-bg" onclick="skipRating()">
+    <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="skipRating()">✕</button>
+      <div class="modal-title">Rate Your Helper</div>
+      <div class="modal-sub" id="rate-helper-subtitle">How was your session?</div>
+      <div style="text-align:center;margin:24px 0 8px">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Tap a star to select your rating</div>
+        <div id="star-row" style="display:flex;justify-content:center;gap:10px;font-size:36px;cursor:pointer">
+          <span class="star" data-v="1" onclick="selectStar(1)">☆</span>
+          <span class="star" data-v="2" onclick="selectStar(2)">☆</span>
+          <span class="star" data-v="3" onclick="selectStar(3)">☆</span>
+          <span class="star" data-v="4" onclick="selectStar(4)">☆</span>
+          <span class="star" data-v="5" onclick="selectStar(5)">☆</span>
+        </div>
+        <div id="star-label" style="font-size:13px;color:var(--muted);margin-top:10px;min-height:18px"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-secondary" style="flex:1" onclick="skipRating()">Skip</button>
+        <button class="btn btn-primary" style="flex:2" id="submit-rating-btn" onclick="submitRating()" disabled>Submit Rating</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div id="modal-forgot-password" style="display:none">
+  <div class="modal-bg" onclick="closeForgotPassword()">
+    <div class="modal" style="max-width:420px" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeForgotPassword()">✕</button>
+
+      <!-- Step 1: Enter email -->
+      <div id="fp-step-1">
+        <div class="modal-title">Reset Your Password</div>
+        <div class="modal-sub">Enter your email address and we'll generate a reset code.</div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <input class="form-input" id="fp-email" type="email" placeholder="you@university.edu">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <button class="btn btn-secondary" style="flex:1" onclick="closeForgotPassword()">Cancel</button>
+          <button class="btn btn-primary" style="flex:2" onclick="doForgotPassword()">Send Reset Code</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Enter reset code + new password -->
+      <div id="fp-step-2" style="display:none">
+        <div class="modal-title">Enter Reset Code</div>
+        <div class="modal-sub">Use the code below (in production this would be emailed to you).</div>
+        <div id="fp-code-display" style="background:var(--accent-bg);border:1.5px dashed var(--accent);border-radius:9px;padding:14px;text-align:center;margin-bottom:20px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Your Reset Code</div>
+          <div id="fp-code-value" style="font-size:26px;font-weight:800;letter-spacing:4px;color:var(--accent);font-family:monospace"></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Valid for 15 minutes</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reset Code</label>
+          <input class="form-input no-icon" id="fp-token" type="text" placeholder="Enter the code above" maxlength="8" style="text-transform:uppercase;letter-spacing:2px;font-family:monospace;font-size:16px">
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input class="form-input" id="fp-new-pass" type="password" placeholder="At least 6 characters">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm New Password</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input class="form-input" id="fp-confirm-pass" type="password" placeholder="Re-enter new password">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <button class="btn btn-secondary" style="flex:1" onclick="fpBackToStep1()">Back</button>
+          <button class="btn btn-primary" style="flex:2" onclick="doResetPassword()">Reset Password</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Live Notification Popup Container -->
+<div id="notif-popup-container"></div>
+
+<!-- Notification Panel -->
+<div id="notif-panel" style="display:none;position:fixed;top:64px;right:16px;width:340px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:500;overflow:hidden">
+  <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-weight:700;font-size:14px">Notifications</span>
+      <span id="notif-panel-badge" style="display:none;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px"></span>
+    </div>
+    <button id="notif-mark-all-btn" onclick="markAllRead()" style="font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;font-weight:600;font-family:inherit;padding:0;display:none">Mark all read</button>
+  </div>
+  <div id="notif-list" style="overflow-y:auto;max-height:390px"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// API HELPER
+// ═══════════════════════════════════════════════
+async function api(method, path, body = null) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch('/api' + path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Something went wrong');
+  return data;
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Highlight every search word inside already-escaped HTML text
+function highlight(text, query) {
+  const safe = esc(text);
+  if (!query || !query.trim()) return safe;
+  const words = query.trim().split(/\s+/).filter(Boolean);
+  let result = safe;
+  words.forEach(w => {
+    const re = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    result = result.replace(new RegExp(`(${re})`, 'gi'), '<mark class="hl">$1</mark>');
+  });
+  return result;
+}
+
+function formatConvoTime(ts) {
+  if (!ts) return '';
+  try {
+    const d   = new Date(ts.replace(' ', 'T') + (ts.includes('T') ? '' : 'Z'));
+    const now = new Date();
+    const sec = Math.floor((now - d) / 1000);
+    if (sec < 60)   return 'Just now';
+    if (sec < 3600) return Math.floor(sec / 60) + 'm ago';
+    if (sec < 86400) return Math.floor(sec / 3600) + 'h ago';
+    if (sec < 604800) return Math.floor(sec / 86400) + 'd ago';
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch (_) { return ''; }
+}
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let currentUser    = null;
+let browseRequests = [];
+let myRequestsList = [];
+let conversations  = [];
+let currentConvoId = null;
+const _sessionCache = {};
+let activeView     = 'home';
+
+// ═══════════════════════════════════════════════
+// INIT — check session on page load
+// ═══════════════════════════════════════════════
+async function init() {
+  try {
+    const data = await api('GET', '/auth/me');
+    currentUser = data.user;
+    await launchApp();
+  } catch (e) {
+    // Not authenticated — show auth screen (already visible by default)
+  }
+}
+init();
+
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+function switchAuthTab(tab) {
+  document.getElementById('auth-signup').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('auth-login').style.display  = tab === 'login'  ? 'block' : 'none';
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+  document.getElementById('tab-login').classList.toggle('active',  tab === 'login');
+}
+
+async function doRegister() {
+  const name     = document.getElementById('reg-name').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-pass').value;
+  const roleEl   = document.querySelector('.role-card.selected');
+  const role     = roleEl ? roleEl.dataset.role : 'requester';
+
+  if (!name)     { showToast('⚠️ Please enter your name');     return; }
+  if (!email)    { showToast('⚠️ Please enter your email');    return; }
+  if (!password) { showToast('⚠️ Please choose a password');  return; }
+
+  try {
+    const data  = await api('POST', '/auth/register', { name, email, password, role });
+    currentUser = data.user;
+    await launchApp();
+  } catch (e) {
+    showToast('⚠️ ' + e.message);
+  }
+}
+
+async function doLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-pass').value;
+  if (!email) { showToast('⚠️ Please enter your email'); return; }
+
+  try {
+    const data  = await api('POST', '/auth/login', { email, password });
+    currentUser = data.user;
+    await launchApp();
+  } catch (e) {
+    showToast('⚠️ ' + e.message);
+  }
+}
+
+async function doLogout() {
+  try { await api('POST', '/auth/logout'); } catch (_) {}
+  currentUser    = null;
+  browseRequests = [];
+  myRequestsList = [];
+  conversations  = [];
+  currentConvoId = null;
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-app').style.display = 'none';
+  document.getElementById('screen-auth').classList.add('active');
+  document.getElementById('screen-auth').style.display = '';
+}
+
+function selectRole(el) {
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ═══════════════════════════════════════════════
+// FORGOT / RESET PASSWORD
+// ═══════════════════════════════════════════════
+function openForgotPassword() {
+  document.getElementById('fp-email').value = '';
+  document.getElementById('fp-token').value = '';
+  document.getElementById('fp-new-pass').value = '';
+  document.getElementById('fp-confirm-pass').value = '';
+  document.getElementById('fp-code-value').textContent = '';
+  document.getElementById('fp-step-1').style.display = 'block';
+  document.getElementById('fp-step-2').style.display = 'none';
+  openModal('modal-forgot-password');
+}
+
+function closeForgotPassword() {
+  closeModal('modal-forgot-password');
+}
+
+function fpBackToStep1() {
+  document.getElementById('fp-step-1').style.display = 'block';
+  document.getElementById('fp-step-2').style.display = 'none';
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('fp-email').value.trim();
+  if (!email) { showToast('⚠️ Please enter your email address'); return; }
+
+  try {
+    const data = await api('POST', '/auth/forgot-password', { email });
+    if (data.token) {
+      document.getElementById('fp-code-value').textContent = data.token;
+      document.getElementById('fp-token').value = data.token;
+    } else {
+      document.getElementById('fp-code-display').style.display = 'none';
+    }
+    document.getElementById('fp-step-1').style.display = 'none';
+    document.getElementById('fp-step-2').style.display = 'block';
+  } catch (e) {
+    showToast('⚠️ ' + e.message);
+  }
+}
+
+async function doResetPassword() {
+  const token       = document.getElementById('fp-token').value.trim();
+  const newPass     = document.getElementById('fp-new-pass').value;
+  const confirmPass = document.getElementById('fp-confirm-pass').value;
+
+  if (!token)       { showToast('⚠️ Please enter the reset code');         return; }
+  if (!newPass)     { showToast('⚠️ Please enter a new password');         return; }
+  if (newPass.length < 6) { showToast('⚠️ Password must be at least 6 characters'); return; }
+  if (newPass !== confirmPass) { showToast('⚠️ Passwords do not match');   return; }
+
+  try {
+    await api('POST', '/auth/reset-password', { token, new_password: newPass });
+    closeForgotPassword();
+    showToast('✅ Password reset! Please log in with your new password.');
+    document.getElementById('login-pass').value = '';
+  } catch (e) {
+    showToast('⚠️ ' + e.message);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// APP LAUNCH
+// ═══════════════════════════════════════════════
+async function launchApp() {
+  document.getElementById('screen-auth').style.display = 'none';
+  document.getElementById('screen-auth').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  document.getElementById('screen-app').style.display = 'block';
+  updateUserUI();
+  // Load all data in parallel
+  await Promise.all([
+    loadStats(),
+    loadBrowseRequests(),
+    loadMyRequests(),
+    loadConversations(),
+    loadNotifications(),
+  ]);
+  startNotifPolling();
+  startMsgPolling();
+  goTo('home');
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function goTo(view) {
+  ['home','browse','myrequests','sessions','messages','profile'].forEach(v => {
+    document.getElementById('view-' + v).style.display = 'none';
+  });
+  document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + view).style.display = 'block';
+  const navBtn = document.getElementById('nav-' + view);
+  if (navBtn) navBtn.classList.add('active');
+  activeView = view;
+
+  if (view === 'home')       { loadStats(); loadHomeRequests(); }
+  if (view === 'browse')     { loadBrowseRequests(); }
+  if (view === 'myrequests') { loadMyRequests(); }
+  if (view === 'sessions')   { loadSessions(); }
+  if (view === 'messages')   {
+    document.getElementById('msg-badge').style.display = 'none';
+    loadConversations();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// USER UI
+// ═══════════════════════════════════════════════
+function updateUserUI() {
+  if (!currentUser) return;
+  const initial = currentUser.name.charAt(0).toUpperCase();
+  document.getElementById('nav-avatar').textContent   = initial;
+  document.getElementById('profile-avatar').textContent = initial;
+  document.getElementById('profile-name').textContent  = currentUser.name;
+  document.getElementById('profile-email').innerHTML   =
+    `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg> ${esc(currentUser.email)}`;
+  document.getElementById('hero-greeting').textContent = `Welcome back, ${currentUser.name}! 👋`;
+  const roleMap = { requester: 'Requester', helper: 'Helper', both: 'Both' };
+  document.getElementById('profile-role-tag').textContent = roleMap[currentUser.role] || 'Requester';
+  document.getElementById('profile-bio').innerHTML =
+    currentUser.bio ? esc(currentUser.bio) : '<em>No bio provided</em>';
+}
+
+// ═══════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════
+async function loadStats() {
+  try {
+    const d = await api('GET', '/stats');
+    document.getElementById('stat-myrequests').textContent     = d.my_requests;
+    document.getElementById('stat-sessions').textContent       = d.sessions;
+    document.getElementById('stat-open').textContent           = d.open_requests;
+    document.getElementById('stat-completed').textContent      = d.completed;
+    document.getElementById('profile-sessions-count').textContent = d.sessions;
+
+    const ratingEl = document.getElementById('profile-rating');
+    const countEl  = document.getElementById('profile-rating-count');
+    if (d.rating_count > 0) {
+      ratingEl.textContent = d.bayesian_rating.toFixed(1) + ' ★';
+      countEl.textContent  = `${d.rating_count} rating${d.rating_count !== 1 ? 's' : ''}`;
+    } else {
+      ratingEl.textContent = 'New';
+      countEl.textContent  = 'No ratings yet';
+    }
+  } catch (_) {}
+}
+
+// ═══════════════════════════════════════════════
+// REQUESTS
+// ═══════════════════════════════════════════════
+function urgencyColor(u) {
+  return u === 'high' ? 'priority-high' : u === 'medium' ? 'priority-medium' : 'priority-low';
+}
+
+function statusBadge(status) {
+  if (status === 'open')        return '<span class="status-open">Open</span>';
+  if (status === 'in-progress') return '<span class="status-progress">In Progress</span>';
+  return '<span class="status-closed">Closed</span>';
+}
+
+function renderCard(req, showOfferBtn = true, searchQuery = '') {
+  const title = highlight(req.title, searchQuery);
+  const desc  = highlight(req.description || req.desc || '', searchQuery);
+  return `
+    <div class="req-card card-clickable" onclick="openRequestDetail(${req.id})">
+      <div class="req-card-header">
+        <div class="req-tags">
+          <span class="tag tag-blue">${esc(req.subject)}</span>
+          <span class="tag tag-gray">${esc(req.category || 'Tutoring')}</span>
+          <span class="tag ${urgencyColor(req.urgency)}">${esc(req.urgency)} priority</span>
+          <span class="tag tag-gray">${esc(req.format)}</span>
+        </div>
+        ${statusBadge(req.status || 'open')}
+      </div>
+      <div class="req-title">${title}</div>
+      <div class="req-desc">${desc}</div>
+      <div class="req-meta">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Posted ${esc(req.date || '')} &nbsp;·&nbsp; By ${esc(req.by || '')}
+        ${showOfferBtn
+          ? `<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="event.stopPropagation();openOfferModal(${req.id})">Offer Help</button>`
+          : ''}
+      </div>
+    </div>`;
+}
+
+async function loadHomeRequests() {
+  const el = document.getElementById('home-recent-requests');
+  try {
+    const d = await api('GET', '/requests');
+    const items = d.requests.slice(0, 3);
+    el.innerHTML = items.length
+      ? items.map(r => renderCard(r, false)).join('')
+      : '<div class="empty"><div class="empty-icon">📋</div><p>No open requests yet. Be the first to post one!</p></div>';
+  } catch (_) { el.innerHTML = ''; }
+}
+
+async function loadBrowseRequests() {
+  const search  = (document.getElementById('browse-search')  || {}).value.trim() || '';
+  const subject = (document.getElementById('filter-subject') || {}).value || '';
+  const urgency = (document.getElementById('filter-urgency') || {}).value || '';
+  const listEl  = document.getElementById('browse-list');
+  const countEl = document.getElementById('browse-count');
+  const clearBtn = document.getElementById('search-clear-btn');
+
+  // Show/hide the ✕ clear button
+  if (clearBtn) clearBtn.style.display = search ? 'block' : 'none';
+
+  try {
+    let url = '/requests?';
+    if (search)  url += `search=${encodeURIComponent(search)}&`;
+    if (subject) url += `subject=${encodeURIComponent(subject)}&`;
+    if (urgency) url += `urgency=${encodeURIComponent(urgency)}&`;
+
+    const d = await api('GET', url);
+    browseRequests = d.requests;
+
+    const words = search.trim().split(/\s+/).filter(Boolean);
+    const summary = search
+      ? `${browseRequests.length} result${browseRequests.length !== 1 ? 's' : ''} for <strong>${esc(search)}</strong>`
+      : `${browseRequests.length} request${browseRequests.length !== 1 ? 's' : ''} found`;
+    countEl.innerHTML = summary;
+
+    listEl.innerHTML = browseRequests.length
+      ? browseRequests.map(r => renderCard(r, true, search)).join('')
+      : `<div class="empty"><div class="empty-icon">🔍</div><h3>No results</h3><p>No requests matched ${words.map(w => `"${esc(w)}"`).join(' + ')}. Try different keywords.</p></div>`;
+  } catch (_) {}
+}
+
+let _searchTimer = null;
+function debouncedFilter() {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(loadBrowseRequests, 300);
+}
+
+function clearSearch() {
+  const input = document.getElementById('browse-search');
+  if (input) { input.value = ''; input.focus(); }
+  loadBrowseRequests();
+}
+
+async function filterRequests() { await loadBrowseRequests(); }
+
+async function loadMyRequests() {
+  try {
+    const d = await api('GET', '/requests?mine=1');
+    myRequestsList = d.requests;
+    renderMyRequestsList();
+  } catch (_) {}
+}
+
+function renderMyRequestsList() {
+  const el = document.getElementById('my-requests-list');
+  document.getElementById('stat-myrequests').textContent = myRequestsList.length;
+  if (!myRequestsList.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📄</div><h3>No Requests Yet</h3><p>You haven't created any help requests.</p><button class="btn btn-primary" style="margin-top:8px" onclick="openNewRequestModal()">Create Your First Request</button></div>`;
+    return;
+  }
+  el.innerHTML = myRequestsList.map(r => `
+    <div class="req-card card-clickable" onclick="openRequestDetail(${r.id})">
+      <div class="req-card-header">
+        <div class="req-tags">
+          <span class="tag tag-blue">${esc(r.subject)}</span>
+          <span class="tag ${urgencyColor(r.urgency)}">${esc(r.urgency)} priority</span>
+        </div>
+        ${statusBadge(r.status)}
+      </div>
+      <div class="req-title">${esc(r.title)}</div>
+      <div class="req-desc">${esc(r.description || '')}</div>
+      <div class="req-meta">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Posted ${esc(r.date || '')}
+        ${r.status === 'open'
+          ? `<button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="event.stopPropagation();deleteRequest(${r.id})">Delete</button>`
+          : ''}
+        ${r.status === 'in-progress'
+          ? `<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="event.stopPropagation();markComplete(${r.id})">Mark Complete</button>`
+          : ''}
+      </div>
+    </div>`).join('');
+}
+
+async function deleteRequest(id) {
+  if (!confirm('Are you sure you want to delete this request? This cannot be undone.')) return;
+  try {
+    await api('DELETE', `/requests/${id}`);
+    await Promise.all([loadMyRequests(), loadBrowseRequests(), loadStats()]);
+    showToast('🗑️ Request deleted');
+  } catch (e) { showToast('⚠️ ' + e.message); }
+}
+
+async function markComplete(id) {
+  try {
+    await api('PATCH', `/requests/${id}`, { status: 'closed' });
+    await Promise.all([loadMyRequests(), loadBrowseRequests(), loadStats()]);
+    showToast('✅ Request marked as complete!');
+  } catch (e) { showToast('⚠️ ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════
+function openModal(id)  { document.getElementById(id).style.display = 'block'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+function openNewRequestModal() { openModal('modal-new-request'); }
+
+async function submitNewRequest() {
+  const title = document.getElementById('nr-title').value.trim();
+  if (!title) { showToast('⚠️ Please add a title'); return; }
+
+  const btn = document.getElementById('btn-submit-req');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Posting…';
+  try {
+    await api('POST', '/requests', {
+      title,
+      description: document.getElementById('nr-desc').value.trim() || 'No description provided.',
+      subject:     document.getElementById('nr-subject').value,
+      category:    'Tutoring',
+      urgency:     document.getElementById('nr-urgency').value,
+      format:      document.getElementById('nr-format').value,
+    });
+    closeModal('modal-new-request');
+    document.getElementById('nr-title').value = '';
+    document.getElementById('nr-desc').value  = '';
+    await Promise.all([loadMyRequests(), loadBrowseRequests(), loadStats()]);
+    showToast('🎉 Help request posted!');
+    goTo('myrequests');
+  } catch (e) { showToast('⚠️ ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Post Request'; }
+}
+
+let currentOfferReqId = null;
+function openOfferModal(reqId) {
+  currentOfferReqId = reqId;
+  const req = browseRequests.find(r => r.id === reqId);
+  document.getElementById('offer-req-title').textContent = req ? req.title : 'Request';
+  document.getElementById('offer-msg').value   = '';
+  document.getElementById('offer-avail').value = '';
+  openModal('modal-offer');
+}
+
+async function submitOffer() {
+  const msg = document.getElementById('offer-msg').value.trim();
+  if (!msg) { showToast('⚠️ Please write a message'); return; }
+
+  const btn = document.getElementById('btn-submit-offer');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Sending…';
+  try {
+    await api('POST', `/requests/${currentOfferReqId}/offers`, {
+      message:      msg,
+      availability: document.getElementById('offer-avail').value.trim(),
+    });
+    closeModal('modal-offer');
+    showToast('📨 Offer sent! Check Messages to continue the conversation.');
+    document.getElementById('msg-badge').style.display = 'flex';
+    await loadConversations();
+  } catch (e) { showToast('⚠️ ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Send Offer'; }
+}
+
+async function openRequestDetail(id) {
+  // Try local caches first, then fetch
+  let req = [...browseRequests, ...myRequestsList].find(r => r.id === id);
+  if (!req) {
+    try {
+      const d = await api('GET', `/requests/${id}`);
+      req = d.request;
+    } catch (_) { return; }
+  }
+
+  const urgLabel = req.urgency.charAt(0).toUpperCase() + req.urgency.slice(1);
+  const isMine   = currentUser && (myRequestsList.some(r => r.id === id) ||
+                   (req.user_id && req.user_id === currentUser.id));
+
+  // Build offers section for own requests
+  let offersHtml = '';
+  if (isMine) {
+    try {
+      const od = await api('GET', `/requests/${id}/offers`);
+      const offers = od.offers;
+      offersHtml = `
+        <div class="divider"></div>
+        <div style="font-weight:700;font-size:14px;margin-bottom:10px">
+          Offers Received
+          <span style="background:var(--accent-bg);color:var(--accent);font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px">${offers.length}</span>
+        </div>
+          ${offers.length === 0
+          ? `<div style="text-align:center;padding:12px;font-size:13px;color:var(--muted)">No offers yet — share your request to get help!</div>`
+          : offers.map(o => {
+              const borderColor = o.status === 'accepted' ? 'var(--green)' : o.status === 'rejected' ? 'var(--border)' : 'var(--border)';
+              const opacityStyle = o.status === 'rejected' ? 'opacity:.45;' : '';
+              let actionHtml;
+              if (o.status === 'accepted') {
+                actionHtml = `<span class="tag tag-green">Accepted ✓</span>`;
+              } else if (o.status === 'rejected') {
+                actionHtml = `<span class="tag tag-gray">Declined</span>`;
+              } else if (req.status === 'open') {
+                actionHtml = `<button class="btn btn-primary btn-sm" onclick="acceptOffer(${o.id},${req.id})">Accept ✓</button>`;
+              } else {
+                actionHtml = '';
+              }
+              return `
+            <div style="background:var(--bg);border-radius:9px;padding:13px 14px;margin-bottom:8px;border:1.5px solid ${borderColor};${opacityStyle}">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:700;font-size:13.5px;margin-bottom:4px">${esc(o.helper_name)}</div>
+                  <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:${o.availability ? '4px' : '0'}">${esc(o.message)}</div>
+                  ${o.availability ? `<div style="font-size:12px;color:var(--muted)">⏰ ${esc(o.availability)}</div>` : ''}
+                </div>
+                <div style="flex-shrink:0">${actionHtml}</div>
+              </div>
+            </div>`;
+            }).join('')
+        }`;
+    } catch (_) {}
+  }
+
+  document.getElementById('modal-detail-content').innerHTML = `
+    <div class="req-tags" style="margin-bottom:14px">
+      <span class="tag tag-blue">${esc(req.subject)}</span>
+      <span class="tag ${urgencyColor(req.urgency)}">${esc(urgLabel)} priority</span>
+      <span class="tag tag-gray">${esc(req.format)}</span>
+      ${statusBadge(req.status || 'open')}
+    </div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:10px">${esc(req.title)}</div>
+    <div style="font-size:13.5px;color:var(--muted);margin-bottom:16px;line-height:1.65">${esc(req.description || req.desc || '')}</div>
+    <div class="divider"></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:${isMine ? '0' : '18px'}">
+      By <strong>${esc(req.by || '')}</strong> · Posted ${esc(req.date || '')}
+    </div>
+    ${offersHtml}
+    ${!isMine && (req.status || 'open') === 'open'
+      ? `<div style="margin-top:18px"><button class="btn btn-primary btn-full" onclick="closeModal('modal-request-detail');openOfferModal(${req.id})">Offer to Help</button></div>`
+      : ''}
+    ${isMine && req.status === 'in-progress'
+      ? `<div style="margin-top:14px"><button class="btn btn-primary btn-full" onclick="closeModal('modal-request-detail');markComplete(${req.id})">✅ Mark as Complete</button></div>`
+      : ''}
+  `;
+  openModal('modal-request-detail');
+}
+
+async function acceptOffer(offerId, reqId) {
+  try {
+    await api('POST', `/offers/${offerId}/accept`);
+    closeModal('modal-request-detail');
+    await Promise.all([loadMyRequests(), loadSessions(), loadStats(), loadNotifications()]);
+    showToast('✅ Offer accepted! A session has been created.');
+    setTimeout(() => goTo('sessions'), 600);
+  } catch (e) { showToast('⚠️ ' + e.message); }
+}
+
+function openEditProfileModal() {
+  document.getElementById('ep-name').value = currentUser.name;
+  document.getElementById('ep-bio').value  = currentUser.bio || '';
+  document.getElementById('ep-role').value = currentUser.role;
+  openModal('modal-edit-profile');
+}
+
+async function saveProfile() {
+  try {
+    const d = await api('PATCH', '/users/me', {
+      name: document.getElementById('ep-name').value.trim(),
+      bio:  document.getElementById('ep-bio').value.trim(),
+      role: document.getElementById('ep-role').value,
+    });
+    currentUser = d.user;
+    closeModal('modal-edit-profile');
+    updateUserUI();
+    showToast('✅ Profile updated!');
+  } catch (e) { showToast('⚠️ ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════
+// MESSAGES
+// ═══════════════════════════════════════════════
+async function loadConversations() {
+  try {
+    const d = await api('GET', '/conversations');
+    conversations = d.conversations;
+    renderConversationsSidebar();
+
+    if (currentConvoId && conversations.find(c => c.id === currentConvoId)) {
+      await loadMessages(currentConvoId);
+    } else if (conversations.length > 0) {
+      const firstConvoId = conversations[0].id;
+      if (activeView === 'messages') {
+        await openConvoById(firstConvoId);
+      } else {
+        currentConvoId = firstConvoId;
+      }
+    }
+  } catch (_) {}
+}
+
+function renderConversationsSidebar() {
+  const sidebar = document.querySelector('.msg-sidebar');
+  // Remove all existing convo items and empty states
+  sidebar.querySelectorAll('.msg-convo-item, .empty').forEach(el => el.remove());
+
+  if (!conversations.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.style.cssText = 'padding:30px 16px';
+    empty.innerHTML = '<div class="empty-icon" style="font-size:28px;opacity:.4">💬</div><p style="font-size:12px;text-align:center;color:var(--muted)">No conversations yet. Submit an offer to start chatting!</p>';
+    sidebar.appendChild(empty);
+    return;
+  }
+
+  conversations.forEach(c => {
+    const item    = document.createElement('div');
+    item.className = 'msg-convo-item' + (c.id === currentConvoId ? ' active' : '');
+    item.onclick   = () => openConvoById(c.id, item);
+    const preview  = c.last_message.length > 50
+      ? c.last_message.substring(0, 50) + '…'
+      : c.last_message || 'No messages yet';
+    item.innerHTML = `
+      <div class="msg-convo-name">${esc(c.other_user_name)}</div>
+      <div class="msg-convo-preview">${esc(preview)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">${esc(c.last_message_time)}</div>
+    `;
+    sidebar.appendChild(item);
+  });
+}
+
+async function openConvoById(id, clickedEl) {
+  currentConvoId = id;
+  _lastMsgId = 0;
+  const c = conversations.find(x => x.id === id);
+  if (!c) return;
+
+  // Update active state in sidebar
+  document.querySelectorAll('.msg-convo-item').forEach(i => i.classList.remove('active'));
+  if (clickedEl) {
+    clickedEl.classList.add('active');
+  } else {
+    document.querySelectorAll('.msg-convo-item').forEach(i => {
+      if (i.querySelector('.msg-convo-name')?.textContent === c.other_user_name) {
+        i.classList.add('active');
+      }
+    });
+  }
+
+  // Update header
+  const initial = c.other_user_initial || c.other_user_name[0].toUpperCase();
+  document.getElementById('msg-main-head').innerHTML =
+    `<div class="avatar" style="width:30px;height:30px;font-size:12px">${esc(initial)}</div> ${esc(c.other_user_name)}`;
+
+  await loadMessages(id);
+}
+
+async function loadMessages(convoId) {
+  try {
+    const d  = await api('GET', `/conversations/${convoId}/messages`);
+    const el = document.getElementById('msg-messages');
+    if (!d.messages.length) {
+      el.innerHTML = '<div class="empty" style="height:100%;padding:30px"><div class="empty-icon" style="font-size:28px">💬</div><p>No messages yet — say hello!</p></div>';
+      _lastMsgId = 0;
+      return;
+    }
+    el.innerHTML = d.messages.map(m => `
+      <div>
+        <div class="msg-bubble ${m.from}">${esc(m.text)}</div>
+        <div class="msg-time ${m.from}">${esc(m.time)}</div>
+      </div>`).join('');
+    el.scrollTop = el.scrollHeight;
+    // Track the latest rendered message so the poller knows what's already shown
+    _lastMsgId = d.messages[d.messages.length - 1].id;
+  } catch (_) {}
+}
+
+async function sendMessage() {
+  const input = document.getElementById('msg-input-box');
+  const text  = input.value.trim();
+  if (!text || !currentConvoId) return;
+  input.value = '';
+  try {
+    await api('POST', `/conversations/${currentConvoId}/messages`, { text });
+    await loadMessages(currentConvoId);
+    // Refresh sidebar preview
+    const d = await api('GET', '/conversations');
+    conversations = d.conversations;
+    renderConversationsSidebar();
+  } catch (e) { showToast('⚠️ ' + e.message); }
+}
+
+function handleMsgKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+// ─── MESSAGE POLLING ───────────────────────────────────────────────────────────
+// Tracks the highest message ID we've already rendered so we can detect new ones.
+let _lastMsgId = 0;
+
+async function pollMessages() {
+  if (!currentUser || !currentConvoId) return;
+
+  try {
+    const d        = await api('GET', `/conversations/${currentConvoId}/messages`);
+    const messages = d.messages;
+    if (!messages.length) return;
+
+    const newestId = messages[messages.length - 1].id;
+    if (newestId <= _lastMsgId) return;   // nothing new
+
+    const isNewIncoming = _lastMsgId > 0 &&
+      messages.some(m => m.id > _lastMsgId && m.from === 'them');
+
+    _lastMsgId = newestId;
+
+    // Re-render the chat bubbles
+    const el = document.getElementById('msg-messages');
+    el.innerHTML = messages.map(m => `
+      <div>
+        <div class="msg-bubble ${m.from}">${esc(m.text)}</div>
+        <div class="msg-time ${m.from}">${esc(m.time)}</div>
+      </div>`).join('');
+    el.scrollTop = el.scrollHeight;
+
+    // Refresh sidebar previews
+    const cd = await api('GET', '/conversations');
+    conversations = cd.conversations;
+    renderConversationsSidebar();
+
+    // If the messages view isn't open, light up the nav badge
+    if (isNewIncoming && activeView !== 'messages') {
+      document.getElementById('msg-badge').style.display = 'flex';
+    }
+  } catch (_) {}
+}
+
+function startMsgPolling() {
+  setInterval(pollMessages, 10000);
+}
+
+// ═══════════════════════════════════════════════
+// SESSIONS
+// ═══════════════════════════════════════════════
+async function loadSessions() {
+  try {
+    const d        = await api('GET', '/sessions');
+    d.sessions.forEach(s => { _sessionCache[s.id] = s; });
+    const upcoming = d.sessions.filter(s => s.status === 'upcoming');
+    const past     = d.sessions.filter(s => s.status !== 'upcoming');
+
+    const upEl = document.getElementById('upcoming-sessions');
+    upEl.innerHTML = upcoming.length
+      ? upcoming.map(s => renderSessionCard(s, false)).join('')
+      : `<div class="card" style="margin-bottom:20px"><div class="empty"><div class="empty-icon">📅</div><p>No upcoming sessions scheduled</p></div></div>`;
+
+    const pastEl = document.getElementById('past-sessions');
+    pastEl.innerHTML = past.length
+      ? past.map(s => renderSessionCard(s, true)).join('')
+      : `<div class="card"><div class="empty"><div class="empty-icon">📅</div><h3>No Past Sessions</h3><p>Create a request to schedule your first session</p><button class="btn btn-primary" style="margin-top:8px" onclick="openNewRequestModal()">Create Request</button></div></div>`;
+  } catch (_) {}
+}
+
+function renderSessionCard(s, isPast) {
+  const isHelper    = currentUser && s.helper_id === currentUser.id;
+  const isRequester = currentUser && s.requester_id === currentUser.id;
+  const alreadyRated = s.rating_given != null;
+
+  let pastActions = '';
+  if (isPast && isRequester) {
+    if (alreadyRated) {
+      const stars = '★'.repeat(s.rating_given) + '☆'.repeat(5 - s.rating_given);
+      pastActions = `<div style="font-size:13px;color:#f59e0b;margin-top:8px">${stars} <span style="color:var(--muted);font-size:12px">You rated ${s.rating_given}/5</span></div>`;
+    } else {
+      pastActions = `<button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="openRatingModal(${s.id}, '${esc(s.helper_name)}')">⭐ Rate Helper</button>`;
+    }
+  }
+
+  return `
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-weight:700;font-size:14.5px">${esc(s.request_title || 'Session')}</div>
+        <span class="${isPast ? 'status-closed' : 'status-progress'}">${isPast ? 'Completed' : 'Upcoming'}</span>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:${(isPast && !pastActions) ? '0' : '8px'}">
+        ${isHelper
+          ? `Helping: <strong>${esc(s.requester_name)}</strong>`
+          : `Helper: <strong>${esc(s.helper_name)}</strong>`}
+      </div>
+      ${!isPast
+        ? `<button class="btn btn-secondary btn-sm" onclick="completeSession(${s.id})">Mark as Complete</button>`
+        : pastActions}
+    </div>`;
+}
+
+async function completeSession(id) {
+  try {
+    await api('PATCH', `/sessions/${id}`, { status: 'completed' });
+    await loadSessions();
+    await loadStats();
+    showToast('✅ Session marked as complete!');
+    const s = _sessionCache[id];
+    if (s && currentUser && s.requester_id === currentUser.id) {
+      openRatingModal(id, s.helper_name);
+    }
+  } catch (e) { showToast('⚠️ ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════
+// RATING
+// ═══════════════════════════════════════════════
+let _ratingSessionId  = null;
+let _ratingScore      = 0;
+const STAR_LABELS     = ['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'];
+
+function openRatingModal(sessionId, helperName) {
+  _ratingSessionId = sessionId;
+  _ratingScore     = 0;
+  document.getElementById('rate-helper-subtitle').textContent =
+    `How was your session with ${helperName}?`;
+  document.getElementById('star-label').textContent = '';
+  document.getElementById('submit-rating-btn').disabled = true;
+  document.querySelectorAll('.star').forEach(s => {
+    s.textContent = '☆';
+    s.classList.remove('active');
+  });
+  document.getElementById('modal-rate-helper').style.display = 'flex';
+}
+
+function selectStar(value) {
+  _ratingScore = value;
+  document.querySelectorAll('.star').forEach(s => {
+    const v = parseInt(s.dataset.v, 10);
+    s.textContent = v <= value ? '★' : '☆';
+    s.classList.toggle('active', v <= value);
+  });
+  document.getElementById('star-label').textContent = STAR_LABELS[value] || '';
+  document.getElementById('submit-rating-btn').disabled = false;
+}
+
+async function submitRating() {
+  if (!_ratingSessionId || !_ratingScore) return;
+  try {
+    await api('POST', `/sessions/${_ratingSessionId}/rate`, { score: _ratingScore });
+    document.getElementById('modal-rate-helper').style.display = 'none';
+    await loadStats();
+    await loadSessions();
+    showToast('⭐ Rating submitted — thank you!');
+  } catch (e) {
+    showToast('⚠️ ' + e.message);
+  }
+}
+
+function skipRating() {
+  document.getElementById('modal-rate-helper').style.display = 'none';
+  _ratingSessionId = null;
+  _ratingScore     = 0;
+}
+
+// ═══════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════
+let notifPanelOpen  = false;
+let _notifCache     = [];
+let _seenNotifIds   = new Set();   // IDs we've already shown a popup for
+let _notifFirstLoad = true;        // suppress popups on the initial login fetch
+
+async function loadNotifications() {
+  try {
+    const d     = await api('GET', '/notifications');
+    const list  = d.notifications;
+    const count = d.unread_count;
+
+    // Detect brand-new notifications and show live pop-ins
+    if (!_notifFirstLoad) {
+      list.filter(n => !n.is_read && !_seenNotifIds.has(n.id))
+          .forEach(n => showNotifPopup(n));
+    }
+    list.forEach(n => _seenNotifIds.add(n.id));
+    _notifFirstLoad = false;
+
+    _notifCache = list;
+
+    // Bell badge
+    const badge = document.getElementById('notif-count');
+    if (count > 0) {
+      badge.textContent   = count > 9 ? '9+' : String(count);
+      badge.style.display = 'block';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    if (notifPanelOpen) renderNotifications(_notifCache);
+  } catch (_) {}
+}
+
+function renderNotifications(list) {
+  const el          = document.getElementById('notif-list');
+  const panelBadge  = document.getElementById('notif-panel-badge');
+  const markAllBtn  = document.getElementById('notif-mark-all-btn');
+  const unreadCount = list.filter(n => !n.is_read).length;
+
+  // Panel badge & "Mark all read" visibility
+  if (unreadCount > 0) {
+    panelBadge.textContent   = unreadCount > 9 ? '9+' : String(unreadCount);
+    panelBadge.style.display = 'inline-block';
+    markAllBtn.style.display = 'block';
+  } else {
+    panelBadge.style.display = 'none';
+    markAllBtn.style.display = 'none';
+  }
+
+  if (!list.length) {
+    el.innerHTML = '<div class="empty" style="padding:36px 16px"><div class="empty-icon" style="font-size:36px">🔔</div><p style="font-size:13px">No notifications yet</p></div>';
+    return;
+  }
+
+  const icons = { offer_received: '📨', offer_accepted: '✅', message: '💬', info: 'ℹ️' };
+  el.innerHTML = list.map(n => {
+    const icon = icons[n.type] || '🔔';
+    const unread = !n.is_read;
+    return `
+      <div onclick="clickNotif(${n.id},${n.link_id || 'null'},'${n.type}')"
+           style="padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer;background:${unread ? 'var(--accent-bg)' : 'transparent'};transition:background .12s;position:relative">
+        <div style="display:flex;align-items:flex-start;gap:11px">
+          <span style="font-size:20px;flex-shrink:0;margin-top:1px">${icon}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;line-height:1.5;${unread ? 'font-weight:600;color:var(--text)' : 'color:var(--muted)'}">${esc(n.message)}</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:3px">${esc(n.created_at ? formatConvoTime(n.created_at) : '')}</div>
+          </div>
+          ${unread ? '<div style="width:8px;height:8px;background:var(--accent);border-radius:50%;flex-shrink:0;margin-top:6px"></div>' : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function showNotifPopup(n) {
+  const icons = { offer_received: '📨', offer_accepted: '✅', message: '💬', info: 'ℹ️' };
+  const icon  = icons[n.type] || '🔔';
+  const container = document.getElementById('notif-popup-container');
+
+  const popup = document.createElement('div');
+  popup.className = 'notif-popup';
+  popup.innerHTML = `
+    <span class="notif-popup-icon">${icon}</span>
+    <div class="notif-popup-body">
+      <div class="notif-popup-msg">${esc(n.message)}</div>
+      <div class="notif-popup-time">Just now</div>
+    </div>
+    <button class="notif-popup-close" onclick="dismissNotifPopup(this,event)">✕</button>`;
+
+  popup.addEventListener('click', () => {
+    dismissNotifPopup(popup.querySelector('.notif-popup-close'), { stopPropagation: () => {} });
+    clickNotif(n.id, n.link_id || null, n.type);
+  });
+
+  container.appendChild(popup);
+
+  // Auto-dismiss after 6 s
+  const timer = setTimeout(() => removeNotifPopup(popup), 6000);
+  popup._autoTimer = timer;
+}
+
+function dismissNotifPopup(btn, e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  const popup = btn.closest('.notif-popup');
+  if (popup) removeNotifPopup(popup);
+}
+
+function removeNotifPopup(popup) {
+  clearTimeout(popup._autoTimer);
+  popup.classList.add('removing');
+  setTimeout(() => popup.remove(), 220);
+}
+
+function toggleNotifPanel() {
+  notifPanelOpen = !notifPanelOpen;
+  const panel = document.getElementById('notif-panel');
+  panel.style.display = notifPanelOpen ? 'block' : 'none';
+  if (notifPanelOpen) {
+    // Show stale cache instantly, then refresh
+    renderNotifications(_notifCache);
+    loadNotifications();
+  }
+}
+
+async function markAllRead() {
+  try {
+    await api('POST', '/notifications/read-all');
+    _notifCache = _notifCache.map(n => ({ ...n, is_read: 1 }));
+    document.getElementById('notif-count').style.display = 'none';
+    renderNotifications(_notifCache);
+  } catch (_) {}
+}
+
+async function clickNotif(notifId, linkId, type) {
+  try { await api('POST', `/notifications/${notifId}/read`); } catch (_) {}
+  _notifCache = _notifCache.map(n => n.id === notifId ? { ...n, is_read: 1 } : n);
+
+  // Close panel
+  notifPanelOpen = false;
+  document.getElementById('notif-panel').style.display = 'none';
+
+  // Update bell badge
+  const unread = _notifCache.filter(n => !n.is_read).length;
+  const badge  = document.getElementById('notif-count');
+  if (unread > 0) { badge.textContent = unread > 9 ? '9+' : String(unread); badge.style.display = 'block'; }
+  else            { badge.style.display = 'none'; }
+
+  // Navigate
+  if (type === 'offer_received' && linkId) {
+    await loadMyRequests();
+    goTo('myrequests');
+    setTimeout(() => openRequestDetail(linkId), 250);
+  } else if (type === 'offer_accepted') {
+    goTo('sessions');
+  } else if (type === 'message') {
+    goTo('messages');
+  }
+}
+
+function startNotifPolling() {
+  setInterval(() => { if (currentUser) loadNotifications(); }, 15000);
+}
+
+// Close notification panel when clicking outside
+document.addEventListener('click', e => {
+  if (!notifPanelOpen) return;
+  const panel = document.getElementById('notif-panel');
+  const btn   = document.getElementById('notif-btn');
+  if (panel && !panel.contains(e.target) && btn && !btn.contains(e.target)) {
+    notifPanelOpen = false;
+    panel.style.display = 'none';
+  }
+});
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className   = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+</script>
+</body>
+</html>
