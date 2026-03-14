@@ -9,13 +9,17 @@ A full-stack peer tutoring platform where students can post help requests, offer
 
 ## Demo Accounts
 
+Use these accounts to try the app. Nina and Jerry use password `123456`; others use `password` (see table below).
+
 | Name  | Email            | Password |
 |-------|------------------|----------|
-| Nina  | nina@scu.edu     | password |
+| Nina  | nina@scu.edu     | 123456   |
 | Sarah | sarah@scu.edu    | password |
 | Mike  | mike@scu.edu     | password |
 | Emily | emily@scu.edu    | password |
-| Jerry | jerry@scu.edu    | password |
+| Jerry | jerry@scu.edu    | 123456   |
+
+You can fill the Password column with actual passwords when setting up your own demo accounts or sharing credentials.
 
 ## Setup & Run
 
