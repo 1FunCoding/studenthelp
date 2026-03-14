@@ -19,6 +19,7 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "studenthelp.db")
 # ─── DB ────────────────────────────────────────────────────────────────────────
 
 def get_db():
+    """Return a per-request SQLite connection, creating it on first access."""
     if "db" not in g:
         g.db = sqlite3.connect(DB_PATH)
         g.db.row_factory = sqlite3.Row
@@ -28,18 +29,21 @@ def get_db():
 
 @app.teardown_appcontext
 def close_db(e=None):
+    """Close the DB connection at the end of each request."""
     db = g.pop("db", None)
     if db is not None:
         db.close()
 
 
 def query(sql, args=(), one=False):
+    """Run a SELECT and return all rows, or a single row when one=True."""
     cur = get_db().execute(sql, args)
     rv = cur.fetchall()
     return (rv[0] if rv else None) if one else rv
 
 
 def execute(sql, args=()):
+    """Run an INSERT/UPDATE/DELETE, commit, and return the cursor."""
     db = get_db()
     cur = db.execute(sql, args)
     db.commit()
@@ -252,6 +256,7 @@ def _seed(db):
 # ─── HELPERS ───────────────────────────────────────────────────────────────────
 
 def fmt_date(ts):
+    """Format a timestamp as M/D/YYYY."""
     if not ts:
         return ""
     try:
@@ -262,6 +267,7 @@ def fmt_date(ts):
 
 
 def fmt_time(ts):
+    """Return a human-friendly time label: clock time for today, 'Yesterday', or a date."""
     if not ts:
         return ""
     try:
@@ -280,6 +286,7 @@ def fmt_time(ts):
 
 
 def req_dict(row):
+    """Convert a request DB row to a JSON-serialisable dict with a formatted date."""
     d = dict(row)
     d["date"] = fmt_date(d.get("created_at", ""))
     d["description"] = d.get("description", "")
@@ -287,6 +294,7 @@ def req_dict(row):
 
 
 def push_notif(user_id, type_, message, link_id=None):
+    """Insert an in-app notification for a user."""
     execute(
         "INSERT INTO notifications (user_id,type,message,link_id) VALUES (?,?,?,?)",
         (user_id, type_, message, link_id),
@@ -585,6 +593,12 @@ def get_offers(req_id):
 @app.route("/api/offers/<int:offer_id>/accept", methods=["POST"])
 @login_required
 def accept_offer(offer_id):
+    """
+    Accept a helper's offer:
+      1. Mark offer accepted, reject all other pending offers for the same request.
+      2. Set request status to 'in-progress' and create a help session.
+      3. Notify the helper and send an automated acceptance message in their conversation.
+    """
     offer = query(
         "SELECT o.*, r.user_id as req_owner FROM offers o JOIN requests r ON o.request_id=r.id WHERE o.id=?",
         (offer_id,), one=True,
@@ -817,6 +831,11 @@ def get_sessions():
 @app.route("/api/sessions/<int:session_id>", methods=["PATCH"])
 @login_required
 def update_session(session_id):
+    """
+    Update a session's status. When marked 'completed':
+      - Send an automated thank-you message in the shared conversation.
+      - Push a 'session_completed' notification to the requester so they can rate the helper.
+    """
     current = uid()
     row     = query(
         "SELECT * FROM help_sessions WHERE id=? AND (requester_id=? OR helper_id=?)",
@@ -930,6 +949,7 @@ def get_stats():
     rating_sum   = user["rating_sum"]   if user else 0
     rating_count = user["rating_count"] if user else 0
 
+    # Average rating (None if the user has no ratings yet)
     if rating_count > 0:
         bayesian_rating = round(rating_sum / rating_count, 1)
     else:
