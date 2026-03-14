@@ -515,7 +515,42 @@ def update_request(req_id):
         return jsonify({"error": "Unauthorized"}), 403
 
     if "status" in data:
-        execute("UPDATE requests SET status=? WHERE id=?", (data["status"], req_id))
+        new_status = data["status"]
+        execute("UPDATE requests SET status=? WHERE id=?", (new_status, req_id))
+
+        # When the requester closes/completes their request, also complete the linked
+        # help session so it appears in Past Sessions and triggers rating + thank-you.
+        if new_status == "closed":
+            sess = query(
+                "SELECT * FROM help_sessions WHERE request_id=? AND requester_id=? AND status='upcoming'",
+                (req_id, uid()), one=True,
+            )
+            if sess:
+                execute("UPDATE help_sessions SET status='completed' WHERE id=?", (sess["id"],))
+
+                # Send automated thank-you message in the shared conversation
+                convo = query(
+                    """SELECT id FROM conversations
+                       WHERE (user1_id=? AND user2_id=?) OR (user1_id=? AND user2_id=?)
+                       LIMIT 1""",
+                    (sess["helper_id"], sess["requester_id"], sess["requester_id"], sess["helper_id"]),
+                    one=True,
+                )
+                if convo:
+                    execute(
+                        "INSERT INTO messages (conversation_id,sender_id,text) VALUES (?,?,?)",
+                        (convo["id"], sess["requester_id"], "Thank you so much for the session!"),
+                    )
+
+                # Notify requester to rate the helper
+                helper_row = query("SELECT name FROM users WHERE id=?", (sess["helper_id"],), one=True)
+                helper_name = helper_row["name"] if helper_row else "your helper"
+                push_notif(
+                    sess["requester_id"],
+                    "session_completed",
+                    f"Your session \"{row['title']}\" is complete! Rate {helper_name}.",
+                    sess["id"],
+                )
 
     row = query("SELECT r.*, u.name as by FROM requests r JOIN users u ON r.user_id=u.id WHERE r.id=?",
                 (req_id,), one=True)

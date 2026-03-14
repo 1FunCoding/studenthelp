@@ -1257,8 +1257,14 @@ async function deleteRequest(id) {
 async function markComplete(id) {
   try {
     await api('PATCH', `/requests/${id}`, { status: 'closed' });
-    await Promise.all([loadMyRequests(), loadBrowseRequests(), loadStats()]);
+    // Reload sessions too — the linked help session is now completed
+    await Promise.all([loadMyRequests(), loadBrowseRequests(), loadStats(), loadSessions(), loadNotifications()]);
     showToast('✅ Request marked as complete!');
+    // Prompt requester to rate if there's a now-completed session for this request
+    const sess = Object.values(_sessionCache).find(
+      s => s.request_id === id && currentUser && s.requester_id === currentUser.id && s.rating_given == null
+    );
+    if (sess) setTimeout(() => openRatingModal(sess.id, sess.helper_name), 300);
   } catch (e) { showToast('⚠️ ' + e.message); }
 }
 
