@@ -826,6 +826,7 @@ mark.hl{background:#fef08a;color:inherit;border-radius:3px;padding:0 2px;font-we
 // ═══════════════════════════════════════════════
 // API HELPER
 // ═══════════════════════════════════════════════
+// Centralised fetch wrapper — prepends /api, sends JSON, throws on non-2xx responses.
 async function api(method, path, body = null) {
   const opts = {
     method,
@@ -839,6 +840,7 @@ async function api(method, path, body = null) {
   return data;
 }
 
+// Escape user-supplied strings before inserting into innerHTML.
 function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -856,14 +858,15 @@ function highlight(text, query) {
   return result;
 }
 
+// Convert a SQLite timestamp to a relative label ("Just now", "5m ago", "2d ago", or a date).
 function formatConvoTime(ts) {
   if (!ts) return '';
   try {
     const d   = new Date(ts.replace(' ', 'T') + (ts.includes('T') ? '' : 'Z'));
     const now = new Date();
     const sec = Math.floor((now - d) / 1000);
-    if (sec < 60)   return 'Just now';
-    if (sec < 3600) return Math.floor(sec / 60) + 'm ago';
+    if (sec < 60)    return 'Just now';
+    if (sec < 3600)  return Math.floor(sec / 60) + 'm ago';
     if (sec < 86400) return Math.floor(sec / 3600) + 'h ago';
     if (sec < 604800) return Math.floor(sec / 86400) + 'd ago';
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -871,15 +874,15 @@ function formatConvoTime(ts) {
 }
 
 // ═══════════════════════════════════════════════
-// STATE
+// STATE — global variables shared across views
 // ═══════════════════════════════════════════════
-let currentUser    = null;
-let browseRequests = [];
-let myRequestsList = [];
-let conversations  = [];
-let currentConvoId = null;
-const _sessionCache = {};
-let activeView     = 'home';
+let currentUser    = null;   // logged-in user object from /api/auth/me
+let browseRequests = [];     // open requests shown in Browse
+let myRequestsList = [];     // current user's own requests
+let conversations  = [];     // all conversations for the sidebar
+let currentConvoId = null;   // active conversation in the Messages view
+const _sessionCache = {};    // session objects keyed by id for quick lookup
+let activeView     = 'home'; // which view is currently visible
 
 // ═══════════════════════════════════════════════
 // INIT — check session on page load
@@ -952,6 +955,7 @@ async function doLogout() {
   document.getElementById('screen-auth').style.display = '';
 }
 
+// Highlight the chosen role card during registration.
 function selectRole(el) {
   document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
@@ -1602,6 +1606,7 @@ async function pollMessages() {
   } catch (_) {}
 }
 
+// Poll for new messages every 10 seconds while the user is logged in.
 function startMsgPolling() {
   setInterval(pollMessages, 10000);
 }
@@ -1629,6 +1634,8 @@ async function loadSessions() {
   } catch (_) {}
 }
 
+// Build the HTML card for one session.
+// isPast=true renders past-session actions (rate button or stars); false renders "Mark as Complete".
 function renderSessionCard(s, isPast) {
   const isHelper    = currentUser && s.helper_id === currentUser.id;
   const isRequester = currentUser && s.requester_id === currentUser.id;
@@ -1688,8 +1695,8 @@ async function completeSession(id) {
 // ═══════════════════════════════════════════════
 // RATING
 // ═══════════════════════════════════════════════
-let _ratingSessionId  = null;
-let _ratingScore      = 0;
+let _ratingSessionId  = null;  // session being rated
+let _ratingScore      = 0;     // currently selected star value (1–5)
 const STAR_LABELS     = ['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'];
 
 function openRatingModal(sessionId, helperName) {
