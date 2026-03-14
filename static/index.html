@@ -1405,7 +1405,8 @@ async function acceptOffer(offerId, reqId) {
   try {
     await api('POST', `/offers/${offerId}/accept`);
     closeModal('modal-request-detail');
-    await Promise.all([loadMyRequests(), loadSessions(), loadStats(), loadNotifications()]);
+    await Promise.all([loadMyRequests(), loadSessions(), loadStats(), loadNotifications(), loadConversations()]);
+    document.getElementById('msg-badge').style.display = 'flex';
     showToast('✅ Offer accepted! A session has been created.');
     setTimeout(() => goTo('sessions'), 600);
   } catch (e) { showToast('⚠️ ' + e.message); }
@@ -1438,11 +1439,11 @@ async function saveProfile() {
 async function loadConversations() {
   try {
     const d = await api('GET', '/conversations');
-    conversations = d.conversations;
+    conversations = Array.isArray(d.conversations) ? d.conversations : [];
     renderConversationsSidebar();
 
     if (currentConvoId && conversations.find(c => c.id === currentConvoId)) {
-      await loadMessages(currentConvoId);
+      await openConvoById(currentConvoId);
     } else if (conversations.length > 0) {
       const firstConvoId = conversations[0].id;
       if (activeView === 'messages') {
@@ -1451,11 +1452,16 @@ async function loadConversations() {
         currentConvoId = firstConvoId;
       }
     }
-  } catch (_) {}
+  } catch (e) {
+    conversations = [];
+    renderConversationsSidebar();
+    if (activeView === 'messages') showToast('⚠️ Could not load conversations');
+  }
 }
 
 function renderConversationsSidebar() {
   const sidebar = document.querySelector('.msg-sidebar');
+  if (!sidebar) return;
   // Remove all existing convo items and empty states
   sidebar.querySelectorAll('.msg-convo-item, .empty').forEach(el => el.remove());
 
@@ -1472,9 +1478,10 @@ function renderConversationsSidebar() {
     const item    = document.createElement('div');
     item.className = 'msg-convo-item' + (c.id === currentConvoId ? ' active' : '');
     item.onclick   = () => openConvoById(c.id, item);
-    const preview  = c.last_message.length > 50
-      ? c.last_message.substring(0, 50) + '…'
-      : c.last_message || 'No messages yet';
+    const lastMsg  = c.last_message != null ? String(c.last_message) : '';
+    const preview  = lastMsg.length > 50
+      ? lastMsg.substring(0, 50) + '…'
+      : lastMsg || 'No messages yet';
     item.innerHTML = `
       <div class="msg-convo-name">${esc(c.other_user_name)}</div>
       <div class="msg-convo-preview">${esc(preview)}</div>
@@ -1503,31 +1510,36 @@ async function openConvoById(id, clickedEl) {
   }
 
   // Update header
-  const initial = c.other_user_initial || c.other_user_name[0].toUpperCase();
+  const otherName = c.other_user_name != null ? String(c.other_user_name) : 'Unknown';
+  const initial   = c.other_user_initial || (otherName && otherName[0].toUpperCase()) || '?';
   document.getElementById('msg-main-head').innerHTML =
-    `<div class="avatar" style="width:30px;height:30px;font-size:12px">${esc(initial)}</div> ${esc(c.other_user_name)}`;
+    `<div class="avatar" style="width:30px;height:30px;font-size:12px">${esc(initial)}</div> ${esc(otherName)}`;
 
   await loadMessages(id);
 }
 
 async function loadMessages(convoId) {
+  const el = document.getElementById('msg-messages');
+  if (!el) return;
   try {
-    const d  = await api('GET', `/conversations/${convoId}/messages`);
-    const el = document.getElementById('msg-messages');
-    if (!d.messages.length) {
+    const d     = await api('GET', `/conversations/${convoId}/messages`);
+    const list  = Array.isArray(d.messages) ? d.messages : [];
+    if (!list.length) {
       el.innerHTML = '<div class="empty" style="height:100%;padding:30px"><div class="empty-icon" style="font-size:28px">💬</div><p>No messages yet — say hello!</p></div>';
       _lastMsgId = 0;
       return;
     }
-    el.innerHTML = d.messages.map(m => `
+    el.innerHTML = list.map(m => `
       <div>
         <div class="msg-bubble ${m.from}">${esc(m.text)}</div>
         <div class="msg-time ${m.from}">${esc(m.time)}</div>
       </div>`).join('');
     el.scrollTop = el.scrollHeight;
     // Track the latest rendered message so the poller knows what's already shown
-    _lastMsgId = d.messages[d.messages.length - 1].id;
-  } catch (_) {}
+    _lastMsgId = list[list.length - 1].id;
+  } catch (e) {
+    el.innerHTML = '<div class="empty" style="height:100%;padding:30px"><div class="empty-icon" style="font-size:28px">⚠️</div><p>Could not load messages. Try again.</p></div>';
+  }
 }
 
 async function sendMessage() {
@@ -1540,7 +1552,7 @@ async function sendMessage() {
     await loadMessages(currentConvoId);
     // Refresh sidebar preview
     const d = await api('GET', '/conversations');
-    conversations = d.conversations;
+    conversations = Array.isArray(d.conversations) ? d.conversations : conversations;
     renderConversationsSidebar();
   } catch (e) { showToast('⚠️ ' + e.message); }
 }
@@ -1558,7 +1570,7 @@ async function pollMessages() {
 
   try {
     const d        = await api('GET', `/conversations/${currentConvoId}/messages`);
-    const messages = d.messages;
+    const messages = Array.isArray(d.messages) ? d.messages : [];
     if (!messages.length) return;
 
     const newestId = messages[messages.length - 1].id;
@@ -1600,9 +1612,10 @@ function startMsgPolling() {
 async function loadSessions() {
   try {
     const d        = await api('GET', '/sessions');
-    d.sessions.forEach(s => { _sessionCache[s.id] = s; });
-    const upcoming = d.sessions.filter(s => s.status === 'upcoming');
-    const past     = d.sessions.filter(s => s.status !== 'upcoming');
+    const sessions = Array.isArray(d.sessions) ? d.sessions : [];
+    sessions.forEach(s => { _sessionCache[s.id] = s; });
+    const upcoming = sessions.filter(s => s.status === 'upcoming');
+    const past     = sessions.filter(s => s.status !== 'upcoming');
 
     const upEl = document.getElementById('upcoming-sessions');
     upEl.innerHTML = upcoming.length
@@ -1642,10 +1655,20 @@ function renderSessionCard(s, isPast) {
           ? `Helping: <strong>${esc(s.requester_name)}</strong>`
           : `Helper: <strong>${esc(s.helper_name)}</strong>`}
       </div>
-      ${!isPast
-        ? `<button class="btn btn-secondary btn-sm" onclick="completeSession(${s.id})">Mark as Complete</button>`
-        : pastActions}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        ${s.conversation_id
+          ? `<a class="btn btn-primary btn-sm" href="#" onclick="openSessionMessage(${s.conversation_id}); return false">💬 Message</a>`
+          : ''}
+        ${!isPast
+          ? `<button class="btn btn-secondary btn-sm" onclick="completeSession(${s.id})">Mark as Complete</button>`
+          : pastActions}
+      </div>
     </div>`;
+}
+
+function openSessionMessage(convoId) {
+  currentConvoId = convoId;
+  goTo('messages');
 }
 
 async function completeSession(id) {
@@ -1654,9 +1677,10 @@ async function completeSession(id) {
     await loadSessions();
     await loadStats();
     showToast('✅ Session marked as complete!');
+    // Immediately prompt the requester to rate (whether they or the helper clicked)
     const s = _sessionCache[id];
-    if (s && currentUser && s.requester_id === currentUser.id) {
-      openRatingModal(id, s.helper_name);
+    if (s && currentUser && s.requester_id === currentUser.id && s.rating_given == null) {
+      setTimeout(() => openRatingModal(id, s.helper_name), 300);
     }
   } catch (e) { showToast('⚠️ ' + e.message); }
 }
@@ -1770,7 +1794,7 @@ function renderNotifications(list) {
     return;
   }
 
-  const icons = { offer_received: '📨', offer_accepted: '✅', message: '💬', info: 'ℹ️' };
+  const icons = { offer_received: '📨', offer_accepted: '✅', message: '💬', session_completed: '⭐', info: 'ℹ️' };
   el.innerHTML = list.map(n => {
     const icon = icons[n.type] || '🔔';
     const unread = !n.is_read;
@@ -1790,7 +1814,7 @@ function renderNotifications(list) {
 }
 
 function showNotifPopup(n) {
-  const icons = { offer_received: '📨', offer_accepted: '✅', message: '💬', info: 'ℹ️' };
+  const icons = { offer_received: '📨', offer_accepted: '✅', message: '💬', session_completed: '⭐', info: 'ℹ️' };
   const icon  = icons[n.type] || '🔔';
   const container = document.getElementById('notif-popup-container');
 
@@ -1871,6 +1895,14 @@ async function clickNotif(notifId, linkId, type) {
     goTo('sessions');
   } else if (type === 'message') {
     goTo('messages');
+  } else if (type === 'session_completed' && linkId) {
+    await loadSessions();
+    goTo('sessions');
+    // Auto-open rating modal for this session if user is the requester and hasn't rated
+    const s = _sessionCache[linkId];
+    if (s && currentUser && s.requester_id === currentUser.id && s.rating_given == null) {
+      setTimeout(() => openRatingModal(linkId, s.helper_name), 300);
+    }
   }
 }
 

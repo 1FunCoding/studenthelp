@@ -537,22 +537,26 @@ def submit_offer(req_id):
         (req_id, uid(), message, data.get("availability") or ""),
     )
 
-    # Create conversation between helper and requester (if none exists)
+    # Ensure conversation exists between helper and requester for this request
     requester_id = req["user_id"]
+    helper_id    = uid()
     existing = query(
         "SELECT id FROM conversations WHERE (user1_id=? AND user2_id=?) OR (user1_id=? AND user2_id=?)",
-        (uid(), requester_id, requester_id, uid()), one=True,
+        (helper_id, requester_id, requester_id, helper_id), one=True,
     )
-    if not existing:
+    if existing:
+        convo_id = existing["id"]
+    else:
         cur = execute(
             "INSERT INTO conversations (user1_id,user2_id,request_id) VALUES (?,?,?)",
-            (uid(), requester_id, req_id),
+            (helper_id, requester_id, req_id),
         )
         convo_id = cur.lastrowid
-        execute(
-            "INSERT INTO messages (conversation_id,sender_id,text) VALUES (?,?,?)",
-            (convo_id, uid(), message),
-        )
+    # Always send the offer message so the requester sees it in Messages
+    execute(
+        "INSERT INTO messages (conversation_id,sender_id,text) VALUES (?,?,?)",
+        (convo_id, helper_id, message),
+    )
 
     # Notify the request owner
     helper = query("SELECT name FROM users WHERE id=?", (uid(),), one=True)
@@ -620,6 +624,32 @@ def accept_offer(offer_id):
             f"Your offer on \"{req_row['title']}\" was accepted! Check your Sessions.",
             offer["request_id"],
         )
+
+    # Send acceptance message; create conversation if one doesn't exist yet
+    requester_id = uid()
+    helper_id    = offer["helper_id"]
+    convo = query(
+        """
+        SELECT id FROM conversations
+        WHERE (user1_id=? AND user2_id=?) OR (user1_id=? AND user2_id=?)
+        ORDER BY (request_id = ?) DESC
+        LIMIT 1
+        """,
+        (helper_id, requester_id, requester_id, helper_id, offer["request_id"]),
+        one=True,
+    )
+    if convo:
+        convo_id = convo["id"]
+    else:
+        cur = execute(
+            "INSERT INTO conversations (user1_id,user2_id,request_id) VALUES (?,?,?)",
+            (requester_id, helper_id, offer["request_id"]),
+        )
+        convo_id = cur.lastrowid
+    execute(
+        "INSERT INTO messages (conversation_id,sender_id,text) VALUES (?,?,?)",
+        (convo_id, requester_id, "I've accepted your offer! Let's coordinate our session here."),
+    )
 
     return jsonify({"ok": True})
 
@@ -765,7 +795,11 @@ def get_sessions():
         """
         SELECT s.*, r.title as request_title,
                u1.name as requester_name, u2.name as helper_name,
-               rt.score as rating_given
+               rt.score as rating_given,
+               (SELECT id FROM conversations c
+                WHERE (c.user1_id = s.requester_id AND c.user2_id = s.helper_id)
+                   OR (c.user1_id = s.helper_id   AND c.user2_id = s.requester_id)
+                LIMIT 1) as conversation_id
         FROM help_sessions s
         JOIN requests r ON s.request_id=r.id
         JOIN users u1 ON s.requester_id=u1.id
@@ -792,7 +826,36 @@ def update_session(session_id):
 
     data = request.json or {}
     if "status" in data:
-        execute("UPDATE help_sessions SET status=? WHERE id=?", (data["status"], session_id))
+        new_status = data["status"]
+        execute("UPDATE help_sessions SET status=? WHERE id=?", (new_status, session_id))
+        # When session is marked completed, send automated thank-you + notify requester to rate
+        if new_status == "completed":
+            convo = query(
+                """
+                SELECT id FROM conversations
+                WHERE (user1_id=? AND user2_id=?) OR (user1_id=? AND user2_id=?)
+                ORDER BY (request_id = ?) DESC
+                LIMIT 1
+                """,
+                (row["helper_id"], row["requester_id"], row["requester_id"], row["helper_id"], row["request_id"]),
+                one=True,
+            )
+            if convo:
+                execute(
+                    "INSERT INTO messages (conversation_id,sender_id,text) VALUES (?,?,?)",
+                    (convo["id"], row["requester_id"], "Thank you so much for the session!"),
+                )
+            # Notify the requester to rate the helper (works whether helper or requester completed)
+            req_title = query("SELECT title FROM requests WHERE id=?", (row["request_id"],), one=True)
+            helper_row = query("SELECT name FROM users WHERE id=?", (row["helper_id"],), one=True)
+            helper_name = helper_row["name"] if helper_row else "your helper"
+            title_str   = req_title["title"] if req_title else "your session"
+            push_notif(
+                row["requester_id"],
+                "session_completed",
+                f"Your session \"{title_str}\" is complete! Rate {helper_name}.",
+                session_id,
+            )
     return jsonify({"ok": True})
 
 
