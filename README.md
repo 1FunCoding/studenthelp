@@ -15,6 +15,7 @@ A full-stack peer tutoring platform where students can post help requests, offer
 | Sarah | sarah@scu.edu    | password |
 | Mike  | mike@scu.edu     | password |
 | Emily | emily@scu.edu    | password |
+| Jerry | jerry@scu.edu    | password |
 
 ## Setup & Run
 

@@ -185,6 +185,7 @@ def _seed(db):
         ("Sarah Johnson",  "sarah@scu.edu", generate_password_hash("password"), "helper",    "Senior Math major, love tutoring!"),
         ("Mike Davis",     "mike@scu.edu",  generate_password_hash("password"), "helper",    "CS major, React & full-stack dev."),
         ("Emily Rodriguez","emily@scu.edu", generate_password_hash("password"), "requester", "Sophomore looking for study help."),
+        ("Jerry",          "jerry@scu.edu", generate_password_hash("password"), "both",      "Junior here to help and learn!"),
     ]
     for u in demo_users:
         db.execute("INSERT INTO users (name,email,password_hash,role,bio) VALUES (?,?,?,?,?)", u)
